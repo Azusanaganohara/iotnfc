@@ -1,0 +1,26 @@
+# Environment variables
+.env
+
+# Build binaries
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+bin/
+iot-api
+iot-api.exe
+
+# Go workspace file (local development only)
+go.work
+go.work.sum
+
+# IDEs and Editors
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS specific
+.DS_Store
+Thumbs.db
