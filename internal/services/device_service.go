@@ -40,13 +40,9 @@ type SetModeInput struct {
 
 func (s *DeviceService) Provision(input ProvisionInput) (*ProvisionResult, error) {
 	cfg := config.Get()
-
-	// Validate provision secret if configured
 	if cfg.ProvisionSecret != "" && input.ProvisionKey != cfg.ProvisionSecret {
 		return nil, errors.New("invalid provision key")
 	}
-
-	// Check if device with same hardware_id already registered (re-provision)
 	var existing models.IotDevice
 	if err := s.db.Where("hardware_id = ?", input.HardwareID).First(&existing).Error; err == nil {
 		newAPIKey, err := utils.GenerateAPIKey()
@@ -65,8 +61,6 @@ func (s *DeviceService) Provision(input ProvisionInput) (*ProvisionResult, error
 			Message:    "Device re-provisioned with new API key",
 		}, nil
 	}
-
-	// New device — generate node_id and api_key
 	nodeID := utils.GenerateNodeID()
 	apiKey, err := utils.GenerateAPIKey()
 	if err != nil {
@@ -128,8 +122,6 @@ func (s *DeviceService) SetMode(nodeID, userID string, input SetModeInput) (*mod
 	if err := s.db.Model(&device).Updates(updates).Error; err != nil {
 		return nil, err
 	}
-
-	// Reload with associations
 	s.db.Preload("Activator").Where("node_id = ?", nodeID).First(&device)
 	return &device, nil
 }
