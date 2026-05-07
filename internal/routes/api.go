@@ -2,7 +2,6 @@ package routes
 
 import (
 	"net/http"
-	"os"
 
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
@@ -29,14 +28,7 @@ func SetupAPI(
 	})
 
 	r.GET("/docs", func(c *gin.Context) {
-		md, err := os.ReadFile("README.md")
-		content := string(md)
-		if err != nil {
-			content = "# Error\nCould not load API documentation."
-		}
-		c.HTML(http.StatusOK, "docs.html", gin.H{
-			"content": content,
-		})
+		c.HTML(http.StatusOK, "docs.html", nil)
 	})
 
 	r.GET("/health", func(c *gin.Context) {
