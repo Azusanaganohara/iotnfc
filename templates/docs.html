@@ -42,6 +42,14 @@ th{text-align:left;padding:8px 10px;background:rgba(0,0,0,.3);color:#94a3b8;font
 td{padding:8px 10px;border-top:1px solid rgba(255,255,255,.04);color:#cbd5e1}
 td code{background:rgba(255,255,255,.06);padding:1px 5px;border-radius:3px;font-size:12px;color:#a5b4fc}
 .auth-info{background:rgba(139,92,246,.08);border:1px solid rgba(139,92,246,.15);border-radius:8px;padding:12px 16px;margin-bottom:14px;font-size:13px;color:#c4b5fd}
+.code-tabs{margin-top:10px}
+.tab-bar{display:flex;gap:0;border-bottom:1px solid rgba(255,255,255,.08);margin-bottom:0}
+.tab-btn{padding:8px 16px;font-size:12px;font-weight:600;color:#64748b;background:none;border:none;cursor:pointer;border-bottom:2px solid transparent;transition:.2s}
+.tab-btn:hover{color:#94a3b8}
+.tab-btn.active{color:#a5b4fc;border-bottom-color:#a5b4fc}
+.tab-content{display:none}
+.tab-content.active{display:block}
+.tab-content pre{border-radius:0 0 8px 8px;margin-top:0;border-top:none}
 @media(max-width:768px){.sidebar{display:none}.main{margin-left:0;padding:20px}}
 </style>
 </head>
@@ -374,10 +382,307 @@ td code{background:rgba(255,255,255,.06);padding:1px 5px;border-radius:3px;font-
 <tr><td><span class="badge badge-admin">Admin Only</span></td><td>JWT with role=admin</td><td>Delete, set mode, create users</td></tr>
 </table>
 </div>
+
+<!-- USAGE EXAMPLES -->
+<div class="section">
+<h2>Usage Examples</h2>
+<p style="color:#94a3b8;font-size:14px;margin-bottom:20px">Complete workflow examples in multiple languages. Copy-paste ready.</p>
+
+<h3 style="color:#fff;font-size:16px;margin-bottom:12px">1. Login & Get Token</h3>
+<div class="code-tabs">
+<div class="tab-bar">
+<button class="tab-btn active" onclick="switchTab(this,'login')">cURL</button>
+<button class="tab-btn" onclick="switchTab(this,'login')">Node.js</button>
+<button class="tab-btn" onclick="switchTab(this,'login')">Python</button>
+<button class="tab-btn" onclick="switchTab(this,'login')">Go</button>
+</div>
+<div class="tab-content active" data-group="login">
+<pre>curl -X POST http://localhost:8080/api/v1/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email":"admin@example.com","password":"yourpassword"}'</pre>
+</div>
+<div class="tab-content" data-group="login">
+<pre>const res = await fetch('http://localhost:8080/api/v1/auth/login', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    email: 'admin@example.com',
+    password: 'yourpassword'
+  })
+});
+const { data } = await res.json();
+const token = data.tokens.access_token;
+console.log('Token:', token);</pre>
+</div>
+<div class="tab-content" data-group="login">
+<pre>import requests
+
+res = requests.post('http://localhost:8080/api/v1/auth/login', json={
+    'email': 'admin@example.com',
+    'password': 'yourpassword'
+})
+token = res.json()['data']['tokens']['access_token']
+print('Token:', token)</pre>
+</div>
+<div class="tab-content" data-group="login">
+<pre>package main
+
+import (
+    "bytes"
+    "encoding/json"
+    "fmt"
+    "net/http"
+)
+
+func main() {
+    body, _ := json.Marshal(map[string]string{
+        "email": "admin@example.com",
+        "password": "yourpassword",
+    })
+    resp, _ := http.Post("http://localhost:8080/api/v1/auth/login",
+        "application/json", bytes.NewBuffer(body))
+    defer resp.Body.Close()
+    var result map[string]interface{}
+    json.NewDecoder(resp.Body).Decode(&result)
+    fmt.Println(result)
+}</pre>
+</div>
+</div>
+
+<h3 style="color:#fff;font-size:16px;margin:24px 0 12px">2. List Devices (Authenticated)</h3>
+<div class="code-tabs">
+<div class="tab-bar">
+<button class="tab-btn active" onclick="switchTab(this,'devlist')">cURL</button>
+<button class="tab-btn" onclick="switchTab(this,'devlist')">Node.js</button>
+<button class="tab-btn" onclick="switchTab(this,'devlist')">Python</button>
+<button class="tab-btn" onclick="switchTab(this,'devlist')">Go</button>
+</div>
+<div class="tab-content active" data-group="devlist">
+<pre>curl http://localhost:8080/api/v1/devices \
+  -H "Authorization: Bearer YOUR_TOKEN"</pre>
+</div>
+<div class="tab-content" data-group="devlist">
+<pre>const res = await fetch('http://localhost:8080/api/v1/devices', {
+  headers: { 'Authorization': `Bearer ${token}` }
+});
+const { data } = await res.json();
+console.log('Devices:', data.devices);</pre>
+</div>
+<div class="tab-content" data-group="devlist">
+<pre>res = requests.get('http://localhost:8080/api/v1/devices',
+    headers={'Authorization': f'Bearer {token}'})
+print(res.json()['data']['devices'])</pre>
+</div>
+<div class="tab-content" data-group="devlist">
+<pre>req, _ := http.NewRequest("GET", "http://localhost:8080/api/v1/devices", nil)
+req.Header.Set("Authorization", "Bearer "+token)
+resp, _ := http.DefaultClient.Do(req)
+defer resp.Body.Close()
+json.NewDecoder(resp.Body).Decode(&result)
+fmt.Println(result)</pre>
+</div>
+</div>
+
+<h3 style="color:#fff;font-size:16px;margin:24px 0 12px">3. Create Member</h3>
+<div class="code-tabs">
+<div class="tab-bar">
+<button class="tab-btn active" onclick="switchTab(this,'memcreate')">cURL</button>
+<button class="tab-btn" onclick="switchTab(this,'memcreate')">Node.js</button>
+<button class="tab-btn" onclick="switchTab(this,'memcreate')">Python</button>
+</div>
+<div class="tab-content active" data-group="memcreate">
+<pre>curl -X POST http://localhost:8080/api/v1/members \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "nik": "1234567890123456",
+    "name": "Budi Santoso",
+    "address": "Jl. Merdeka No. 1",
+    "phone": "081234567890",
+    "birth_date": "1990-01-01"
+  }'</pre>
+</div>
+<div class="tab-content" data-group="memcreate">
+<pre>const res = await fetch('http://localhost:8080/api/v1/members', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+    'Authorization': `Bearer ${token}`
+  },
+  body: JSON.stringify({
+    nik: '1234567890123456',
+    name: 'Budi Santoso',
+    address: 'Jl. Merdeka No. 1',
+    phone: '081234567890',
+    birth_date: '1990-01-01'
+  })
+});
+console.log(await res.json());</pre>
+</div>
+<div class="tab-content" data-group="memcreate">
+<pre>res = requests.post('http://localhost:8080/api/v1/members',
+    headers={'Authorization': f'Bearer {token}'},
+    json={
+        'nik': '1234567890123456',
+        'name': 'Budi Santoso',
+        'address': 'Jl. Merdeka No. 1',
+        'phone': '081234567890',
+        'birth_date': '1990-01-01'
+    })
+print(res.json())</pre>
+</div>
+</div>
+
+<h3 style="color:#fff;font-size:16px;margin:24px 0 12px">4. KTP Tap from Device (ESP32/Arduino)</h3>
+<div class="code-tabs">
+<div class="tab-bar">
+<button class="tab-btn active" onclick="switchTab(this,'ktptap')">cURL</button>
+<button class="tab-btn" onclick="switchTab(this,'ktptap')">Node.js</button>
+<button class="tab-btn" onclick="switchTab(this,'ktptap')">Arduino/C++</button>
+</div>
+<div class="tab-content active" data-group="ktptap">
+<pre># Using Device API Key from .env
+curl -X POST http://localhost:8080/api/v1/ktp/tap \
+  -H "Content-Type: application/json" \
+  -H "X-API-Key: YOUR_DEVICE_API_KEY" \
+  -H "X-Node-ID: node-xxxx-xxxx" \
+  -d '{"nik":"1234567890123456"}'</pre>
+</div>
+<div class="tab-content" data-group="ktptap">
+<pre>const res = await fetch('http://localhost:8080/api/v1/ktp/tap', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+    'X-API-Key': 'YOUR_DEVICE_API_KEY',
+    'X-Node-ID': 'node-xxxx-xxxx'
+  },
+  body: JSON.stringify({ nik: '1234567890123456' })
+});
+const { data } = await res.json();
+if (data.action === 'granted') {
+  console.log('ACCESS GRANTED:', data.member.name);
+} else {
+  console.log('DENIED:', data.message);
+}</pre>
+</div>
+<div class="tab-content" data-group="ktptap">
+<pre>#include &lt;HTTPClient.h&gt;
+#include &lt;ArduinoJson.h&gt;
+
+HTTPClient http;
+http.begin("http://YOUR_SERVER:8080/api/v1/ktp/tap");
+http.addHeader("Content-Type", "application/json");
+http.addHeader("X-API-Key", "YOUR_DEVICE_API_KEY");
+http.addHeader("X-Node-ID", "node-xxxx-xxxx");
+
+String payload = "{\"nik\":\"" + scannedNIK + "\"}";
+int code = http.POST(payload);
+
+if (code == 200) {
+  String response = http.getString();
+  DynamicJsonDocument doc(1024);
+  deserializeJson(doc, response);
+  String action = doc["data"]["action"];
+  if (action == "granted") {
+    openDoor();  // Your relay/servo logic
+  }
+}
+http.end();</pre>
+</div>
+</div>
+
+<h3 style="color:#fff;font-size:16px;margin:24px 0 12px">5. Provision New Device</h3>
+<div class="code-tabs">
+<div class="tab-bar">
+<button class="tab-btn active" onclick="switchTab(this,'prov')">cURL</button>
+<button class="tab-btn" onclick="switchTab(this,'prov')">Node.js</button>
+</div>
+<div class="tab-content active" data-group="prov">
+<pre>curl -X POST http://localhost:8080/api/v1/devices/provision \
+  -H "Content-Type: application/json" \
+  -d '{
+    "hardware_id": "ESP32-A1B2C3",
+    "device_name": "Main Entrance",
+    "provision_key": "YOUR_PROVISION_SECRET"
+  }'
+
+# Response contains node_id and api_key - save these!</pre>
+</div>
+<div class="tab-content" data-group="prov">
+<pre>const res = await fetch('http://localhost:8080/api/v1/devices/provision', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    hardware_id: 'ESP32-A1B2C3',
+    device_name: 'Main Entrance',
+    provision_key: 'YOUR_PROVISION_SECRET'
+  })
+});
+const { data } = await res.json();
+console.log('Node ID:', data.node_id);
+console.log('API Key:', data.api_key);  // Save this!</pre>
+</div>
+</div>
+
+<h3 style="color:#fff;font-size:16px;margin:24px 0 12px">6. Get Access Logs with Filters</h3>
+<div class="code-tabs">
+<div class="tab-bar">
+<button class="tab-btn active" onclick="switchTab(this,'logs')">cURL</button>
+<button class="tab-btn" onclick="switchTab(this,'logs')">Node.js</button>
+<button class="tab-btn" onclick="switchTab(this,'logs')">Python</button>
+</div>
+<div class="tab-content active" data-group="logs">
+<pre># All logs
+curl http://localhost:8080/api/v1/ktp/logs \
+  -H "Authorization: Bearer YOUR_TOKEN"
+
+# Filter by device
+curl http://localhost:8080/api/v1/ktp/logs/device/node-xxxx \
+  -H "Authorization: Bearer YOUR_TOKEN"
+
+# Filter by NIK
+curl http://localhost:8080/api/v1/ktp/logs/member/1234567890123456 \
+  -H "Authorization: Bearer YOUR_TOKEN"
+
+# With pagination
+curl "http://localhost:8080/api/v1/ktp/logs?page=1&limit=50" \
+  -H "Authorization: Bearer YOUR_TOKEN"</pre>
+</div>
+<div class="tab-content" data-group="logs">
+<pre>// All logs with pagination
+const res = await fetch(
+  'http://localhost:8080/api/v1/ktp/logs?page=1&limit=50',
+  { headers: { 'Authorization': `Bearer ${token}` } }
+);
+const { data } = await res.json();
+console.log(`Total: ${data.pagination.total}`);
+data.logs.forEach(log => {
+  console.log(`${log.action} - ${log.nik} at ${log.tapped_at}`);
+});</pre>
+</div>
+<div class="tab-content" data-group="logs">
+<pre># All logs
+res = requests.get('http://localhost:8080/api/v1/ktp/logs',
+    headers={'Authorization': f'Bearer {token}'},
+    params={'page': 1, 'limit': 50})
+logs = res.json()['data']['logs']
+for log in logs:
+    print(f"{log['action']} - {log['nik']}")</pre>
+</div>
+</div>
+</div>
 </div>
 
 <script>
 function toggle(el){el.nextElementSibling.classList.toggle('open')}
+function switchTab(btn,group){
+  var tabs=btn.closest('.code-tabs');
+  tabs.querySelectorAll('.tab-btn').forEach(function(b){b.classList.remove('active')});
+  btn.classList.add('active');
+  var contents=tabs.querySelectorAll('.tab-content[data-group="'+group+'"]');
+  var idx=Array.from(btn.parentNode.children).indexOf(btn);
+  contents.forEach(function(c,i){c.classList.toggle('active',i===idx)});
+}
 document.querySelectorAll('.nav-link').forEach(function(a){a.addEventListener('click',function(e){
   e.preventDefault();var t=document.querySelector(this.getAttribute('href'));if(t){
   var b=t.querySelector('.ep-body');if(b&&!b.classList.contains('open'))b.classList.add('open');
