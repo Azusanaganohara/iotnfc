@@ -45,6 +45,7 @@ th{text-align:left;padding:8px 10px;background:rgba(0,0,0,.3);color:#94a3b8;font
 td{padding:8px 10px;border-top:1px solid rgba(255,255,255,.04);color:#cbd5e1}
 td code{background:rgba(255,255,255,.06);padding:1px 5px;border-radius:3px;font-size:12px;color:#a5b4fc}
 .auth-info{background:rgba(139,92,246,.08);border:1px solid rgba(139,92,246,.15);border-radius:8px;padding:12px 16px;margin-bottom:14px;font-size:13px;color:#c4b5fd}
+.ep-text{font-size:13px;color:#cbd5e1;margin-bottom:14px;line-height:1.5}
 .code-tabs{margin-top:10px}
 .tab-bar{display:flex;gap:0;border-bottom:1px solid rgba(255,255,255,.08);margin-bottom:0}
 .tab-btn{padding:8px 16px;font-size:12px;font-weight:600;color:#64748b;background:none;border:none;cursor:pointer;border-bottom:2px solid transparent;transition:.2s}
@@ -108,6 +109,7 @@ td code{background:rgba(255,255,255,.06);padding:1px 5px;border-radius:3px;font-
 <div class="ep-header" onclick="toggle(this)"><span class="ep-method m-post">POST</span><span class="ep-path">/auth/register</span><span class="ep-desc">Register new user</span></div>
 <div class="ep-body">
 <div class="auth-info"><span class="badge badge-public">PUBLIC</span> First user auto-becomes admin. After that, <span class="badge badge-admin">ADMIN</span> required via <code>POST /auth/users</code>.</div>
+<p class="ep-text">Registers a new user in the system. The very first user registered will automatically be assigned the "admin" role. Subsequent registrations might require admin privileges depending on configuration.</p>
 <div class="ep-label">Request Body</div>
 <pre>{
   "name": "Admin User",
@@ -132,6 +134,7 @@ td code{background:rgba(255,255,255,.06);padding:1px 5px;border-radius:3px;font-
 <div class="ep-header" onclick="toggle(this)"><span class="ep-method m-post">POST</span><span class="ep-path">/auth/login</span><span class="ep-desc">Login &amp; get tokens</span></div>
 <div class="ep-body">
 <div class="auth-info"><span class="badge badge-public">PUBLIC</span></div>
+<p class="ep-text">Authenticates a user and returns an access token (valid for 15 minutes) and a refresh token (valid for 7 days). Use the access token in the Authorization header for subsequent API calls.</p>
 <div class="ep-label">Request Body</div>
 <pre>{
   "email": "admin@example.com",
@@ -156,6 +159,7 @@ td code{background:rgba(255,255,255,.06);padding:1px 5px;border-radius:3px;font-
 <div class="ep-header" onclick="toggle(this)"><span class="ep-method m-post">POST</span><span class="ep-path">/auth/refresh</span><span class="ep-desc">Refresh access token</span></div>
 <div class="ep-body">
 <div class="auth-info"><span class="badge badge-public">PUBLIC</span></div>
+<p class="ep-text">Generates a new access token using a valid refresh token. This allows users to stay logged in without needing to re-enter their credentials every 15 minutes.</p>
 <div class="ep-label">Request Body</div>
 <pre>{ "refresh_token": "eyJhbGci..." }</pre>
 <div class="ep-label">Response 200</div>
@@ -173,6 +177,7 @@ td code{background:rgba(255,255,255,.06);padding:1px 5px;border-radius:3px;font-
 <div class="ep-header" onclick="toggle(this)"><span class="ep-method m-get">GET</span><span class="ep-path">/auth/me</span><span class="ep-desc">Get current user profile</span></div>
 <div class="ep-body">
 <div class="auth-info"><span class="badge badge-jwt">JWT</span> Header: <code>Authorization: Bearer &lt;access_token&gt;</code></div>
+<p class="ep-text">Retrieves the profile information of the currently authenticated user based on the provided access token.</p>
 <div class="ep-label">Response 200</div>
 <pre>{
   "data": {
@@ -186,6 +191,7 @@ td code{background:rgba(255,255,255,.06);padding:1px 5px;border-radius:3px;font-
 <div class="ep-header" onclick="toggle(this)"><span class="ep-method m-post">POST</span><span class="ep-path">/auth/logout</span><span class="ep-desc">Logout (discard tokens)</span></div>
 <div class="ep-body">
 <div class="auth-info"><span class="badge badge-jwt">JWT</span></div>
+<p class="ep-text">Logs out the current user. Since this is a stateless JWT implementation, the client should discard the tokens locally after this call.</p>
 <div class="ep-label">Response 200</div>
 <pre>{ "message": "Logged out successfully. Please discard your tokens." }</pre>
 </div></div>
@@ -200,6 +206,7 @@ td code{background:rgba(255,255,255,.06);padding:1px 5px;border-radius:3px;font-
 <div class="ep-header" onclick="toggle(this)"><span class="ep-method m-post">POST</span><span class="ep-path">/devices/provision</span><span class="ep-desc">Provision a new device</span></div>
 <div class="ep-body">
 <div class="auth-info"><span class="badge badge-public">PUBLIC</span> Requires <code>provision_key</code> if PROVISION_SECRET is set in .env</div>
+<p class="ep-text">Registers a new physical IoT device to the system. Returns a unique <code>node_id</code> and <code>api_key</code> that the device must save and use for future authentication. The device starts in a "pending" mode until an admin activates it.</p>
 <div class="ep-label">Request Body</div>
 <pre>{
   "hardware_id": "ESP32-A1B2C3",
@@ -222,6 +229,7 @@ td code{background:rgba(255,255,255,.06);padding:1px 5px;border-radius:3px;font-
 <div class="ep-header" onclick="toggle(this)"><span class="ep-method m-get">GET</span><span class="ep-path">/devices/me/status</span><span class="ep-desc">Device checks own status</span></div>
 <div class="ep-body">
 <div class="auth-info"><span class="badge badge-device">DEVICE</span> Headers: <code>X-API-Key</code> + <code>X-Node-ID</code></div>
+<p class="ep-text">Used by the IoT device as a heartbeat (ping). Returns the device's current mode ("active", "register", etc.) so the device knows how to behave. Calling this endpoint automatically updates the device's "last seen" uptime in the database.</p>
 <div class="ep-label">Response 200</div>
 <pre>{
   "data": {
@@ -235,6 +243,7 @@ td code{background:rgba(255,255,255,.06);padding:1px 5px;border-radius:3px;font-
 <div class="ep-header" onclick="toggle(this)"><span class="ep-method m-get">GET</span><span class="ep-path">/devices</span><span class="ep-desc">List all devices</span></div>
 <div class="ep-body">
 <div class="auth-info"><span class="badge badge-jwt">JWT</span></div>
+<p class="ep-text">Retrieves a list of all IoT devices registered in the system. Used to populate the devices dashboard.</p>
 <div class="ep-label">Response 200</div>
 <pre>{ "data": { "devices": [...], "total": 3 } }</pre>
 </div></div>
@@ -242,6 +251,7 @@ td code{background:rgba(255,255,255,.06);padding:1px 5px;border-radius:3px;font-
 <div class="endpoint" id="dev-one">
 <div class="ep-header" onclick="toggle(this)"><span class="ep-method m-get">GET</span><span class="ep-path">/devices/:node_id</span><span class="ep-desc">Get device detail</span></div>
 <div class="ep-body"><div class="auth-info"><span class="badge badge-jwt">JWT</span></div>
+<p class="ep-text">Retrieves detailed information about a specific IoT device by its Node ID.</p>
 <div class="ep-label">Response 200</div>
 <pre>{ "data": { "id": "...", "node_id": "...", "device_name": "...", "mode": "active", ... } }</pre>
 </div></div>
@@ -249,6 +259,7 @@ td code{background:rgba(255,255,255,.06);padding:1px 5px;border-radius:3px;font-
 <div class="endpoint" id="dev-update">
 <div class="ep-header" onclick="toggle(this)"><span class="ep-method m-put">PUT</span><span class="ep-path">/devices/:node_id</span><span class="ep-desc">Update device name/location</span></div>
 <div class="ep-body"><div class="auth-info"><span class="badge badge-jwt">JWT</span></div>
+<p class="ep-text">Updates the basic information (name and physical location) of an IoT device. Mode changes are handled via a separate endpoint.</p>
 <div class="ep-label">Request Body</div>
 <pre>{ "device_name": "New Name", "location": "Floor 2" }</pre>
 </div></div>
@@ -256,6 +267,7 @@ td code{background:rgba(255,255,255,.06);padding:1px 5px;border-radius:3px;font-
 <div class="endpoint" id="dev-mode">
 <div class="ep-header" onclick="toggle(this)"><span class="ep-method m-put">PUT</span><span class="ep-path">/devices/:node_id/mode</span><span class="ep-desc">Set device mode</span></div>
 <div class="ep-body"><div class="auth-info"><span class="badge badge-admin">ADMIN</span> + <span class="badge badge-jwt">JWT</span></div>
+<p class="ep-text">Changes the operating mode of the device (e.g., from "active" to "register" to allow new KTP scanning). Requires administrative privileges.</p>
 <div class="ep-label">Request Body</div>
 <pre>{ "mode": "active", "location": "Lobby" }
 // mode: "active" | "register" | "inactive" | "pending"</pre>
@@ -263,7 +275,9 @@ td code{background:rgba(255,255,255,.06);padding:1px 5px;border-radius:3px;font-
 
 <div class="endpoint" id="dev-delete">
 <div class="ep-header" onclick="toggle(this)"><span class="ep-method m-del">DEL</span><span class="ep-path">/devices/:node_id</span><span class="ep-desc">Delete device</span></div>
-<div class="ep-body"><div class="auth-info"><span class="badge badge-admin">ADMIN</span> + <span class="badge badge-jwt">JWT</span></div></div>
+<div class="ep-body"><div class="auth-info"><span class="badge badge-admin">ADMIN</span> + <span class="badge badge-jwt">JWT</span></div>
+<p class="ep-text">Permanently deletes a device from the system. Requires administrative privileges.</p>
+</div>
 </div>
 </div>
 
@@ -274,6 +288,7 @@ td code{background:rgba(255,255,255,.06);padding:1px 5px;border-radius:3px;font-
 <div class="endpoint" id="mem-list">
 <div class="ep-header" onclick="toggle(this)"><span class="ep-method m-get">GET</span><span class="ep-path">/members</span><span class="ep-desc">List members (paginated)</span></div>
 <div class="ep-body"><div class="auth-info"><span class="badge badge-jwt">JWT</span></div>
+<p class="ep-text">Retrieves a paginated list of all registered members (people with KTP access). Supports searching by name or NIK.</p>
 <div class="ep-label">Query Params</div>
 <table><tr><th>Param</th><th>Type</th><th>Description</th></tr>
 <tr><td><code>page</code></td><td>int</td><td>Page number (default: 1)</td></tr>
@@ -291,6 +306,7 @@ td code{background:rgba(255,255,255,.06);padding:1px 5px;border-radius:3px;font-
 <div class="endpoint" id="mem-create">
 <div class="ep-header" onclick="toggle(this)"><span class="ep-method m-post">POST</span><span class="ep-path">/members</span><span class="ep-desc">Register new member</span></div>
 <div class="ep-body"><div class="auth-info"><span class="badge badge-jwt">JWT</span></div>
+<p class="ep-text">Registers a new member manually via the dashboard. The NIK must be exactly 16 digits.</p>
 <div class="ep-label">Request Body</div>
 <pre>{
   "nik": "1234567890123456",   // required, 16 digits
@@ -304,17 +320,22 @@ td code{background:rgba(255,255,255,.06);padding:1px 5px;border-radius:3px;font-
 
 <div class="endpoint" id="mem-id">
 <div class="ep-header" onclick="toggle(this)"><span class="ep-method m-get">GET</span><span class="ep-path">/members/:id</span><span class="ep-desc">Get member by ID</span></div>
-<div class="ep-body"><div class="auth-info"><span class="badge badge-jwt">JWT</span></div></div>
+<div class="ep-body"><div class="auth-info"><span class="badge badge-jwt">JWT</span></div>
+<p class="ep-text">Retrieves detailed information about a specific member using their unique database ID.</p>
+</div>
 </div>
 
 <div class="endpoint" id="mem-nik">
 <div class="ep-header" onclick="toggle(this)"><span class="ep-method m-get">GET</span><span class="ep-path">/members/nik/:nik</span><span class="ep-desc">Get member by NIK</span></div>
-<div class="ep-body"><div class="auth-info"><span class="badge badge-jwt">JWT</span></div></div>
+<div class="ep-body"><div class="auth-info"><span class="badge badge-jwt">JWT</span></div>
+<p class="ep-text">Retrieves detailed information about a specific member using their 16-digit NIK.</p>
+</div>
 </div>
 
 <div class="endpoint" id="mem-update">
 <div class="ep-header" onclick="toggle(this)"><span class="ep-method m-put">PUT</span><span class="ep-path">/members/:id</span><span class="ep-desc">Update member</span></div>
 <div class="ep-body"><div class="auth-info"><span class="badge badge-jwt">JWT</span></div>
+<p class="ep-text">Updates member details. Note that the NIK cannot be changed after registration. The "is_active" flag can be toggled to grant or revoke access.</p>
 <div class="ep-label">Request Body</div>
 <pre>{
   "name": "New Name",
@@ -327,7 +348,9 @@ td code{background:rgba(255,255,255,.06);padding:1px 5px;border-radius:3px;font-
 
 <div class="endpoint" id="mem-delete">
 <div class="ep-header" onclick="toggle(this)"><span class="ep-method m-del">DEL</span><span class="ep-path">/members/:id</span><span class="ep-desc">Delete member</span></div>
-<div class="ep-body"><div class="auth-info"><span class="badge badge-admin">ADMIN</span> + <span class="badge badge-jwt">JWT</span></div></div>
+<div class="ep-body"><div class="auth-info"><span class="badge badge-admin">ADMIN</span> + <span class="badge badge-jwt">JWT</span></div>
+<p class="ep-text">Permanently deletes a member and their access rights from the system. Requires administrative privileges.</p>
+</div>
 </div>
 </div>
 
