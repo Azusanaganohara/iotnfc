@@ -16,7 +16,7 @@ body{font-family:'Inter',-apple-system,sans-serif;background:#0f111a;color:#e2e8
 .nav-link:hover{color:#fff;background:rgba(255,255,255,.05)}
 .nav-link .method{font-size:10px;font-weight:700;padding:2px 6px;border-radius:4px;min-width:36px;text-align:center;color:#fff}
 .m-get{background:#10b981}.m-post{background:#3b82f6}.m-put{background:#f59e0b}.m-del{background:#ef4444}
-.main{margin-left:260px;padding:40px 50px;max-width:900px}
+.main{margin-left:260px;padding:40px 50px;max-width:1400px}
 h1{font-size:28px;color:#fff;margin-bottom:8px}
 .subtitle{color:#94a3b8;margin-bottom:32px;font-size:15px}
 .section{margin-bottom:48px}
@@ -27,8 +27,11 @@ h1{font-size:28px;color:#fff;margin-bottom:8px}
 .ep-method{font-size:11px;font-weight:800;padding:4px 10px;border-radius:6px;color:#fff;min-width:50px;text-align:center}
 .ep-path{font-family:'Fira Code',monospace;font-size:14px;color:#e2e8f0;font-weight:500}
 .ep-desc{margin-left:auto;font-size:12px;color:#64748b}
-.ep-body{display:none;padding:18px;border-top:1px solid rgba(255,255,255,.06);background:rgba(0,0,0,.15)}
-.ep-body.open{display:block}
+.ep-body{display:none;padding:18px;border-top:1px solid rgba(255,255,255,.06);background:rgba(0,0,0,.15);gap:30px}
+.ep-body.open{display:grid;grid-template-columns:1fr 1fr}
+@media(max-width:1100px){.ep-body.open{grid-template-columns:1fr}}
+.ep-left{min-width:0;display:flex;flex-direction:column}
+.ep-right{min-width:0}
 .ep-label{font-size:11px;text-transform:uppercase;letter-spacing:1px;color:#64748b;font-weight:700;margin-bottom:6px;margin-top:14px}
 .ep-label:first-child{margin-top:0}
 pre{background:#0a0c14;border:1px solid rgba(255,255,255,.06);border-radius:8px;padding:14px;font-size:12px;overflow-x:auto;color:#a5b4fc;font-family:'Fira Code',monospace;line-height:1.7}
@@ -94,7 +97,7 @@ td code{background:rgba(255,255,255,.06);padding:1px 5px;border-radius:3px;font-
 
 <div class="main">
 <h1>IoT KTP Access API v1.0</h1>
-<p class="subtitle">Base URL: <code style="background:rgba(255,255,255,.06);padding:2px 8px;border-radius:4px;color:#a5b4fc">http://localhost:8080/api/v1</code></p>
+<p class="subtitle">Base URL: <code style="background:rgba(255,255,255,.06);padding:2px 8px;border-radius:4px;color:#a5b4fc">https://iot.airashi.biz.id/api/v1</code></p>
 
 <!-- AUTH SECTION -->
 <div class="section" id="section-auth">
@@ -397,12 +400,12 @@ td code{background:rgba(255,255,255,.06);padding:1px 5px;border-radius:3px;font-
 <button class="tab-btn" onclick="switchTab(this,'login')">Go</button>
 </div>
 <div class="tab-content active" data-group="login">
-<pre>curl -X POST http://localhost:8080/api/v1/auth/login \
+<pre>curl -X POST https://iot.airashi.biz.id/api/v1/auth/login \
   -H "Content-Type: application/json" \
   -d '{"email":"admin@example.com","password":"yourpassword"}'</pre>
 </div>
 <div class="tab-content" data-group="login">
-<pre>const res = await fetch('http://localhost:8080/api/v1/auth/login', {
+<pre>const res = await fetch('https://iot.airashi.biz.id/api/v1/auth/login', {
   method: 'POST',
   headers: { 'Content-Type': 'application/json' },
   body: JSON.stringify({
@@ -417,7 +420,7 @@ console.log('Token:', token);</pre>
 <div class="tab-content" data-group="login">
 <pre>import requests
 
-res = requests.post('http://localhost:8080/api/v1/auth/login', json={
+res = requests.post('https://iot.airashi.biz.id/api/v1/auth/login', json={
     'email': 'admin@example.com',
     'password': 'yourpassword'
 })
@@ -439,7 +442,7 @@ func main() {
         "email": "admin@example.com",
         "password": "yourpassword",
     })
-    resp, _ := http.Post("http://localhost:8080/api/v1/auth/login",
+    resp, _ := http.Post("https://iot.airashi.biz.id/api/v1/auth/login",
         "application/json", bytes.NewBuffer(body))
     defer resp.Body.Close()
     var result map[string]interface{}
@@ -458,23 +461,23 @@ func main() {
 <button class="tab-btn" onclick="switchTab(this,'devlist')">Go</button>
 </div>
 <div class="tab-content active" data-group="devlist">
-<pre>curl http://localhost:8080/api/v1/devices \
+<pre>curl https://iot.airashi.biz.id/api/v1/devices \
   -H "Authorization: Bearer YOUR_TOKEN"</pre>
 </div>
 <div class="tab-content" data-group="devlist">
-<pre>const res = await fetch('http://localhost:8080/api/v1/devices', {
+<pre>const res = await fetch('https://iot.airashi.biz.id/api/v1/devices', {
   headers: { 'Authorization': `Bearer ${token}` }
 });
 const { data } = await res.json();
 console.log('Devices:', data.devices);</pre>
 </div>
 <div class="tab-content" data-group="devlist">
-<pre>res = requests.get('http://localhost:8080/api/v1/devices',
+<pre>res = requests.get('https://iot.airashi.biz.id/api/v1/devices',
     headers={'Authorization': f'Bearer {token}'})
 print(res.json()['data']['devices'])</pre>
 </div>
 <div class="tab-content" data-group="devlist">
-<pre>req, _ := http.NewRequest("GET", "http://localhost:8080/api/v1/devices", nil)
+<pre>req, _ := http.NewRequest("GET", "https://iot.airashi.biz.id/api/v1/devices", nil)
 req.Header.Set("Authorization", "Bearer "+token)
 resp, _ := http.DefaultClient.Do(req)
 defer resp.Body.Close()
@@ -491,7 +494,7 @@ fmt.Println(result)</pre>
 <button class="tab-btn" onclick="switchTab(this,'memcreate')">Python</button>
 </div>
 <div class="tab-content active" data-group="memcreate">
-<pre>curl -X POST http://localhost:8080/api/v1/members \
+<pre>curl -X POST https://iot.airashi.biz.id/api/v1/members \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -503,7 +506,7 @@ fmt.Println(result)</pre>
   }'</pre>
 </div>
 <div class="tab-content" data-group="memcreate">
-<pre>const res = await fetch('http://localhost:8080/api/v1/members', {
+<pre>const res = await fetch('https://iot.airashi.biz.id/api/v1/members', {
   method: 'POST',
   headers: {
     'Content-Type': 'application/json',
@@ -520,7 +523,7 @@ fmt.Println(result)</pre>
 console.log(await res.json());</pre>
 </div>
 <div class="tab-content" data-group="memcreate">
-<pre>res = requests.post('http://localhost:8080/api/v1/members',
+<pre>res = requests.post('https://iot.airashi.biz.id/api/v1/members',
     headers={'Authorization': f'Bearer {token}'},
     json={
         'nik': '1234567890123456',
@@ -542,14 +545,14 @@ print(res.json())</pre>
 </div>
 <div class="tab-content active" data-group="ktptap">
 <pre># Using Device API Key from .env
-curl -X POST http://localhost:8080/api/v1/ktp/tap \
+curl -X POST https://iot.airashi.biz.id/api/v1/ktp/tap \
   -H "Content-Type: application/json" \
   -H "X-API-Key: YOUR_DEVICE_API_KEY" \
   -H "X-Node-ID: node-xxxx-xxxx" \
   -d '{"nik":"1234567890123456"}'</pre>
 </div>
 <div class="tab-content" data-group="ktptap">
-<pre>const res = await fetch('http://localhost:8080/api/v1/ktp/tap', {
+<pre>const res = await fetch('https://iot.airashi.biz.id/api/v1/ktp/tap', {
   method: 'POST',
   headers: {
     'Content-Type': 'application/json',
@@ -598,7 +601,7 @@ http.end();</pre>
 <button class="tab-btn" onclick="switchTab(this,'prov')">Node.js</button>
 </div>
 <div class="tab-content active" data-group="prov">
-<pre>curl -X POST http://localhost:8080/api/v1/devices/provision \
+<pre>curl -X POST https://iot.airashi.biz.id/api/v1/devices/provision \
   -H "Content-Type: application/json" \
   -d '{
     "hardware_id": "ESP32-A1B2C3",
@@ -609,7 +612,7 @@ http.end();</pre>
 # Response contains node_id and api_key - save these!</pre>
 </div>
 <div class="tab-content" data-group="prov">
-<pre>const res = await fetch('http://localhost:8080/api/v1/devices/provision', {
+<pre>const res = await fetch('https://iot.airashi.biz.id/api/v1/devices/provision', {
   method: 'POST',
   headers: { 'Content-Type': 'application/json' },
   body: JSON.stringify({
@@ -633,25 +636,25 @@ console.log('API Key:', data.api_key);  // Save this!</pre>
 </div>
 <div class="tab-content active" data-group="logs">
 <pre># All logs
-curl http://localhost:8080/api/v1/ktp/logs \
+curl https://iot.airashi.biz.id/api/v1/ktp/logs \
   -H "Authorization: Bearer YOUR_TOKEN"
 
 # Filter by device
-curl http://localhost:8080/api/v1/ktp/logs/device/node-xxxx \
+curl https://iot.airashi.biz.id/api/v1/ktp/logs/device/node-xxxx \
   -H "Authorization: Bearer YOUR_TOKEN"
 
 # Filter by NIK
-curl http://localhost:8080/api/v1/ktp/logs/member/1234567890123456 \
+curl https://iot.airashi.biz.id/api/v1/ktp/logs/member/1234567890123456 \
   -H "Authorization: Bearer YOUR_TOKEN"
 
 # With pagination
-curl "http://localhost:8080/api/v1/ktp/logs?page=1&limit=50" \
+curl "https://iot.airashi.biz.id/api/v1/ktp/logs?page=1&limit=50" \
   -H "Authorization: Bearer YOUR_TOKEN"</pre>
 </div>
 <div class="tab-content" data-group="logs">
 <pre>// All logs with pagination
 const res = await fetch(
-  'http://localhost:8080/api/v1/ktp/logs?page=1&limit=50',
+  'https://iot.airashi.biz.id/api/v1/ktp/logs?page=1&limit=50',
   { headers: { 'Authorization': `Bearer ${token}` } }
 );
 const { data } = await res.json();
@@ -662,7 +665,7 @@ data.logs.forEach(log => {
 </div>
 <div class="tab-content" data-group="logs">
 <pre># All logs
-res = requests.get('http://localhost:8080/api/v1/ktp/logs',
+res = requests.get('https://iot.airashi.biz.id/api/v1/ktp/logs',
     headers={'Authorization': f'Bearer {token}'},
     params={'page': 1, 'limit': 50})
 logs = res.json()['data']['logs']
@@ -687,6 +690,75 @@ document.querySelectorAll('.nav-link').forEach(function(a){a.addEventListener('c
   e.preventDefault();var t=document.querySelector(this.getAttribute('href'));if(t){
   var b=t.querySelector('.ep-body');if(b&&!b.classList.contains('open'))b.classList.add('open');
   t.scrollIntoView({behavior:'smooth',block:'center'})}})});
+
+document.addEventListener('DOMContentLoaded', () => {
+  document.querySelectorAll('.endpoint').forEach(endpoint => {
+    const epBody = endpoint.querySelector('.ep-body');
+    if (!epBody) return;
+    if (epBody.querySelector('.ep-left')) return;
+
+    const leftCol = document.createElement('div');
+    leftCol.className = 'ep-left';
+    while (epBody.firstChild) leftCol.appendChild(epBody.firstChild);
+
+    const rightCol = document.createElement('div');
+    rightCol.className = 'ep-right';
+
+    const header = endpoint.querySelector('.ep-header');
+    const method = header.querySelector('.ep-method').innerText.trim();
+    const path = header.querySelector('.ep-path').innerText.trim();
+    const fullUrl = 'https://iot.airashi.biz.id/api/v1' + path;
+    const isPublic = leftCol.querySelector('.badge-public') !== null;
+    
+    let reqBody = '';
+    const labels = Array.from(leftCol.querySelectorAll('.ep-label'));
+    const reqLabel = labels.find(l => l.innerText.includes('Request Body'));
+    if (reqLabel && reqLabel.nextElementSibling && reqLabel.nextElementSibling.tagName === 'PRE') {
+      reqBody = reqLabel.nextElementSibling.innerText.trim();
+    }
+
+    let curl = `curl -X ${method} "${fullUrl}" \\\n  -H "Accept: application/json"`;
+    if (reqBody) curl += ` \\\n  -H "Content-Type: application/json"`;
+    if (!isPublic) curl += ` \\\n  -H "Authorization: Bearer YOUR_TOKEN"`;
+    if (reqBody) curl += ` \\\n  -d '${reqBody.replace(/'/g, "'\\''")}'`;
+
+    let fetchCode = `fetch("${fullUrl}", {\n  method: "${method}",\n  headers: {\n    "Accept": "application/json"`;
+    if (reqBody) fetchCode += `,\n    "Content-Type": "application/json"`;
+    if (!isPublic) fetchCode += `,\n    "Authorization": "Bearer YOUR_TOKEN"`;
+    fetchCode += `\n  }`;
+    if (reqBody) fetchCode += `,\n  body: JSON.stringify(${reqBody.replace(/\n/g, '\n  ')})`;
+    fetchCode += `\n})\n.then(res => res.json())\n.then(console.log);`;
+
+    let axiosCode = `axios({\n  method: "${method}",\n  url: "${fullUrl}"`;
+    if (!isPublic || reqBody) {
+      axiosCode += `,\n  headers: {`;
+      const h = [];
+      if (reqBody) h.push(`\n    "Content-Type": "application/json"`);
+      if (!isPublic) h.push(`\n    "Authorization": "Bearer YOUR_TOKEN"`);
+      axiosCode += h.join(',') + `\n  }`;
+    }
+    if (reqBody) axiosCode += `,\n  data: ${reqBody.replace(/\n/g, '\n  ')}`;
+    axiosCode += `\n})\n.then(res => console.log(res.data));`;
+
+    const randGroup = Math.random().toString(36).substring(7);
+    rightCol.innerHTML = `
+      <div class="ep-label" style="margin-top:0;margin-bottom:8px">Code Snippets</div>
+      <div class="code-tabs" style="margin-top:0">
+        <div class="tab-bar">
+          <button class="tab-btn active" onclick="switchTab(this,'${randGroup}')">cURL</button>
+          <button class="tab-btn" onclick="switchTab(this,'${randGroup}')">Axios</button>
+          <button class="tab-btn" onclick="switchTab(this,'${randGroup}')">Fetch</button>
+        </div>
+        <div class="tab-content active" data-group="${randGroup}"><pre>${curl}</pre></div>
+        <div class="tab-content" data-group="${randGroup}"><pre>${axiosCode}</pre></div>
+        <div class="tab-content" data-group="${randGroup}"><pre>${fetchCode}</pre></div>
+      </div>
+    `;
+
+    epBody.appendChild(leftCol);
+    epBody.appendChild(rightCol);
+  });
+});
 </script>
 </body>
 </html>
