@@ -37,6 +37,8 @@ func main() {
 	r.Use(middleware.CORS())
 	r.Use(rl.Middleware())
 
+	r.LoadHTMLGlob("templates/*")
+
 	routes.SetupAPI(r, db, authH, deviceH, memberH, ktpH)
 
 	log.Printf("IoT KTP API running on port %s (env: %s)", cfg.Port, cfg.Env)

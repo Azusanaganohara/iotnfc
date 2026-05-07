@@ -1,6 +1,8 @@
 package routes
 
 import (
+	"net/http"
+
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
 
@@ -16,6 +18,15 @@ func SetupAPI(
 	memberH *handlers.MemberHandler,
 	ktpH *handlers.KTPHandler,
 ) {
+	// Forbidden handlers for direct access
+	r.NoRoute(func(c *gin.Context) {
+		c.HTML(http.StatusForbidden, "forbidden.html", nil)
+	})
+
+	r.GET("/", func(c *gin.Context) {
+		c.HTML(http.StatusForbidden, "forbidden.html", nil)
+	})
+
 	r.GET("/health", func(c *gin.Context) {
 		c.JSON(200, gin.H{
 			"status":  "ok",
