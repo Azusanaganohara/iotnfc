@@ -627,7 +627,50 @@ console.log('API Key:', data.api_key);  // Save this!</pre>
 </div>
 </div>
 
-<h3 style="color:#fff;font-size:16px;margin:24px 0 12px">6. Get Access Logs with Filters</h3>
+<h3 style="color:#fff;font-size:16px;margin:24px 0 12px">6. Check Device Status (Heartbeat / Uptime)</h3>
+<div class="code-tabs">
+<div class="tab-bar">
+<button class="tab-btn active" onclick="switchTab(this,'heartbeat')">cURL</button>
+<button class="tab-btn" onclick="switchTab(this,'heartbeat')">Arduino/C++</button>
+</div>
+<div class="tab-content active" data-group="heartbeat">
+<pre># Calling this endpoint updates the 'last_seen_at' (uptime) of the device
+curl -X GET https://iot.airashi.biz.id/api/v1/devices/me/status \
+  -H "X-API-Key: YOUR_DEVICE_API_KEY" \
+  -H "X-Node-ID: node-xxxx-xxxx"</pre>
+</div>
+<div class="tab-content" data-group="heartbeat">
+<pre>#include &lt;HTTPClient.h&gt;
+#include &lt;ArduinoJson.h&gt;
+
+// Call this function periodically (e.g., every 30 seconds) in loop()
+void checkStatus() {
+  HTTPClient http;
+  http.begin("http://YOUR_SERVER:8080/api/v1/devices/me/status");
+  http.addHeader("X-API-Key", "YOUR_DEVICE_API_KEY");
+  http.addHeader("X-Node-ID", "node-xxxx-xxxx");
+
+  int code = http.GET();
+  if (code == 200) {
+    String response = http.getString();
+    DynamicJsonDocument doc(1024);
+    deserializeJson(doc, response);
+    
+    // Server updates last_seen_at automatically.
+    // Read current mode to decide what to do
+    String currentMode = doc["data"]["mode"]; 
+    if (currentMode == "active") {
+       // Normal operation
+    } else if (currentMode == "register") {
+       // Wait for new cards to register
+    }
+  }
+  http.end();
+}</pre>
+</div>
+</div>
+
+<h3 style="color:#fff;font-size:16px;margin:24px 0 12px">7. Get Access Logs with Filters</h3>
 <div class="code-tabs">
 <div class="tab-bar">
 <button class="tab-btn active" onclick="switchTab(this,'logs')">cURL</button>
