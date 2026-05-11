@@ -3,6 +3,8 @@ package utils
 import (
 	"crypto/rand"
 	"encoding/hex"
+	"strconv"
+	"time"
 
 	"github.com/google/uuid"
 )
@@ -21,4 +23,8 @@ func GenerateAPIKey() (string, error) {
 		return "", err
 	}
 	return hex.EncodeToString(b), nil
+}
+
+func GenerateUnixID() string {
+	return strconv.FormatInt(time.Now().UnixMilli(), 10)
 }

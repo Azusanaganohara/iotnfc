@@ -79,10 +79,26 @@ func SetupAPI(
 		{
 			members.GET("", memberH.GetAll)
 			members.POST("", memberH.Create)
-			members.GET("/nik/:nik", memberH.GetByNIK)
+			members.GET("/unix/:unix_id", memberH.GetByUnixID)
+			members.GET("/nik/:nik", memberH.GetByUnixID)
 			members.GET("/:id", memberH.GetByID)
 			members.PUT("/:id", memberH.Update)
 			members.DELETE("/:id", middleware.AdminRequired(), memberH.Delete)
+		}
+		card := v1.Group("/card")
+		{
+			cardDevice := card.Group("")
+			cardDevice.Use(middleware.DeviceAuth(db))
+			{
+				cardDevice.POST("/tap", ktpH.Tap)
+			}
+			cardAdmin := card.Group("")
+			cardAdmin.Use(middleware.AuthRequired())
+			{
+				cardAdmin.GET("/logs", ktpH.GetLogs)
+				cardAdmin.GET("/logs/device/:node_id", ktpH.GetLogsByDevice)
+				cardAdmin.GET("/logs/member/:unix_id", ktpH.GetLogsByUnixID)
+			}
 		}
 		ktp := v1.Group("/ktp")
 		{
@@ -96,7 +112,7 @@ func SetupAPI(
 			{
 				ktpAdmin.GET("/logs", ktpH.GetLogs)
 				ktpAdmin.GET("/logs/device/:node_id", ktpH.GetLogsByDevice)
-				ktpAdmin.GET("/logs/member/:nik", ktpH.GetLogsByNIK)
+				ktpAdmin.GET("/logs/member/:nik", ktpH.GetLogsByUnixID)
 			}
 		}
 	}

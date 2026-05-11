@@ -14,7 +14,7 @@ const (
 type AccessLog struct {
 	ID       string    `gorm:"type:varchar(36);primaryKey" json:"id"`
 	NodeID   string    `gorm:"type:varchar(36);not null;index" json:"node_id"`
-	NIK      string    `gorm:"type:varchar(16);not null;index" json:"nik"`
+	UnixID   string    `gorm:"type:varchar(20);not null;index" json:"unix_id"`
 	MemberID *string   `gorm:"type:varchar(36)" json:"member_id"`
 	Action   LogAction `gorm:"type:enum('granted','denied','registered','already_registered');not null" json:"action"`
 	Reason   string    `gorm:"type:varchar(255)" json:"reason"`

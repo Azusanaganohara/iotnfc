@@ -2,7 +2,7 @@ package services
 
 import (
 	"errors"
-	"time"
+	"strings"
 
 	"gorm.io/gorm"
 
@@ -19,8 +19,9 @@ func NewKTPService(db *gorm.DB) *KTPService {
 }
 
 type TapInput struct {
-	NIK  string `json:"nik" binding:"required,len=16,numeric"`
-	Name string `json:"name"`
+	UnixID string `json:"unix_id" binding:"required,numeric"`
+	Name   string `json:"name"`
+	Phone  string `json:"phone"`
 }
 
 type TapResult struct {
@@ -45,21 +46,21 @@ func (s *KTPService) ProcessTap(device *models.IotDevice, input TapInput) (*TapR
 
 func (s *KTPService) handleActiveTap(device *models.IotDevice, input TapInput) (*TapResult, error) {
 	var member models.Member
-	err := s.db.Where("nik = ?", input.NIK).First(&member).Error
+	err := s.db.Where("unix_id = ?", input.UnixID).First(&member).Error
 
 	log := &models.AccessLog{
 		ID:     utils.GenerateUUID(),
 		NodeID: device.NodeID,
-		NIK:    input.NIK,
+		UnixID: input.UnixID,
 	}
 
 	if err != nil {
 		log.Action = models.ActionDenied
-		log.Reason = "NIK not registered as member"
+		log.Reason = "Unix ID not registered as member"
 		s.db.Create(log)
 		return &TapResult{
 			Action:     string(models.ActionDenied),
-			Message:    "Access denied: NIK not registered",
+			Message:    "Access denied: Unix ID not registered",
 			DeviceMode: string(device.Mode),
 		}, nil
 	}
@@ -89,59 +90,86 @@ func (s *KTPService) handleActiveTap(device *models.IotDevice, input TapInput) (
 }
 
 func (s *KTPService) handleRegisterTap(device *models.IotDevice, input TapInput) (*TapResult, error) {
-	var existing models.Member
-	err := s.db.Where("nik = ?", input.NIK).First(&existing).Error
+	var member models.Member
+	err := s.db.Where("unix_id = ?", input.UnixID).First(&member).Error
 
 	log := &models.AccessLog{
 		ID:     utils.GenerateUUID(),
 		NodeID: device.NodeID,
-		NIK:    input.NIK,
+		UnixID: input.UnixID,
 	}
 
-	if err == nil {
-		log.Action = models.ActionAlreadyRegistered
-		log.MemberID = &existing.ID
-		log.Reason = "NIK already registered"
+	if err != nil {
+		log.Action = models.ActionDenied
+		log.Reason = "Unix ID not found"
 		s.db.Create(log)
 		return &TapResult{
-			Action:     string(models.ActionAlreadyRegistered),
-			Message:    "NIK is already a registered member",
-			Member:     &existing,
+			Action:     string(models.ActionDenied),
+			Message:    "Registration denied: Unix ID not found",
 			DeviceMode: string(device.Mode),
 		}, nil
 	}
-	name := input.Name
-	if name == "" {
-		name = "Member " + input.NIK[len(input.NIK)-4:]
+
+	if member.IsActive {
+		log.Action = models.ActionAlreadyRegistered
+		log.MemberID = &member.ID
+		log.Reason = "Member already active"
+		s.db.Create(log)
+		return &TapResult{
+			Action:     string(models.ActionAlreadyRegistered),
+			Message:    "Member already active",
+			Member:     &member,
+			DeviceMode: string(device.Mode),
+		}, nil
 	}
 
-	now := time.Now()
-	_ = now
-	newMember := &models.Member{
-		ID:                 utils.GenerateUUID(),
-		NIK:                input.NIK,
-		Name:               name,
-		IsActive:           true,
-		RegisteredByDevice: &device.NodeID,
+	if input.Name != "" && !strings.EqualFold(strings.TrimSpace(input.Name), strings.TrimSpace(member.Name)) {
+		log.Action = models.ActionDenied
+		log.MemberID = &member.ID
+		log.Reason = "Member name mismatch"
+		s.db.Create(log)
+		return &TapResult{
+			Action:     string(models.ActionDenied),
+			Message:    "Registration denied: member data mismatch",
+			DeviceMode: string(device.Mode),
+		}, nil
 	}
 
-	if err := s.db.Create(newMember).Error; err != nil {
+	if input.Phone != "" && normalizePhone(input.Phone) != normalizePhone(member.Phone) {
+		log.Action = models.ActionDenied
+		log.MemberID = &member.ID
+		log.Reason = "Member phone mismatch"
+		s.db.Create(log)
+		return &TapResult{
+			Action:     string(models.ActionDenied),
+			Message:    "Registration denied: member data mismatch",
+			DeviceMode: string(device.Mode),
+		}, nil
+	}
+
+	if err := s.db.Model(&member).Updates(map[string]interface{}{
+		"is_active":            true,
+		"registered_by_device": device.NodeID,
+	}).Error; err != nil {
 		return nil, err
 	}
 
 	log.Action = models.ActionRegistered
-	log.MemberID = &newMember.ID
+	log.MemberID = &member.ID
+	log.Reason = "Member activated via card registration"
 	s.db.Create(log)
 
+	member.IsActive = true
+	member.RegisteredByDevice = &device.NodeID
 	return &TapResult{
 		Action:     string(models.ActionRegistered),
-		Message:    "KTP registered as new member successfully",
-		Member:     newMember,
+		Message:    "Card registered, member activated",
+		Member:     &member,
 		DeviceMode: string(device.Mode),
 	}, nil
 }
 
-func (s *KTPService) GetLogs(nodeID, nik string, page, limit int) ([]models.AccessLog, int64, error) {
+func (s *KTPService) GetLogs(nodeID, unixID string, page, limit int) ([]models.AccessLog, int64, error) {
 	var logs []models.AccessLog
 	var total int64
 
@@ -149,10 +177,17 @@ func (s *KTPService) GetLogs(nodeID, nik string, page, limit int) ([]models.Acce
 	if nodeID != "" {
 		q = q.Where("node_id = ?", nodeID)
 	}
-	if nik != "" {
-		q = q.Where("nik = ?", nik)
+	if unixID != "" {
+		q = q.Where("unix_id = ?", unixID)
 	}
 	q.Count(&total)
 	err := q.Offset((page - 1) * limit).Limit(limit).Order("tapped_at DESC").Find(&logs).Error
 	return logs, total, err
+}
+
+func normalizePhone(value string) string {
+	value = strings.TrimSpace(value)
+	value = strings.ReplaceAll(value, " ", "")
+	value = strings.ReplaceAll(value, "-", "")
+	return value
 }

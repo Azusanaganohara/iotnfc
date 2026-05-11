@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>IoT KTP API - Documentation</title>
+<title>IoT Card API - Documentation</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 body{font-family:'Inter',-apple-system,sans-serif;background:#0f111a;color:#e2e8f0;line-height:1.6}
@@ -83,21 +83,21 @@ td code{background:rgba(255,255,255,.06);padding:1px 5px;border-radius:3px;font-
 <a class="nav-link" href="#mem-list"><span class="method m-get">GET</span>/members</a>
 <a class="nav-link" href="#mem-create"><span class="method m-post">POST</span>/members</a>
 <a class="nav-link" href="#mem-id"><span class="method m-get">GET</span>/members/:id</a>
-<a class="nav-link" href="#mem-nik"><span class="method m-get">GET</span>/members/nik/:nik</a>
+<a class="nav-link" href="#mem-unix"><span class="method m-get">GET</span>/members/unix/:unix_id</a>
 <a class="nav-link" href="#mem-update"><span class="method m-put">PUT</span>/members/:id</a>
 <a class="nav-link" href="#mem-delete"><span class="method m-del">DEL</span>/members/:id</a>
 </div>
 <div class="nav-group">
-<div class="nav-group-title">KTP Tapping</div>
-<a class="nav-link" href="#ktp-tap"><span class="method m-post">POST</span>/ktp/tap</a>
-<a class="nav-link" href="#ktp-logs"><span class="method m-get">GET</span>/ktp/logs</a>
-<a class="nav-link" href="#ktp-logs-dev"><span class="method m-get">GET</span>/ktp/logs/device/:node_id</a>
-<a class="nav-link" href="#ktp-logs-nik"><span class="method m-get">GET</span>/ktp/logs/member/:nik</a>
+<div class="nav-group-title">Card Tapping</div>
+<a class="nav-link" href="#card-tap"><span class="method m-post">POST</span>/card/tap</a>
+<a class="nav-link" href="#card-logs"><span class="method m-get">GET</span>/card/logs</a>
+<a class="nav-link" href="#card-logs-dev"><span class="method m-get">GET</span>/card/logs/device/:node_id</a>
+<a class="nav-link" href="#card-logs-unix"><span class="method m-get">GET</span>/card/logs/member/:unix_id</a>
 </div>
 </nav>
 
 <div class="main">
-<h1>IoT KTP Access API v1.0</h1>
+<h1>IoT Card Access API v1.0</h1>
 <p class="subtitle">Base URL: <code style="background:rgba(255,255,255,.06);padding:2px 8px;border-radius:4px;color:#a5b4fc">https://iot.airashi.biz.id/api/v1</code></p>
 
 <!-- AUTH SECTION -->
@@ -267,7 +267,7 @@ td code{background:rgba(255,255,255,.06);padding:1px 5px;border-radius:3px;font-
 <div class="endpoint" id="dev-mode">
 <div class="ep-header" onclick="toggle(this)"><span class="ep-method m-put">PUT</span><span class="ep-path">/devices/:node_id/mode</span><span class="ep-desc">Set device mode</span></div>
 <div class="ep-body"><div class="auth-info"><span class="badge badge-admin">ADMIN</span> + <span class="badge badge-jwt">JWT</span></div>
-<p class="ep-text">Changes the operating mode of the device (e.g., from "active" to "register" to allow new KTP scanning). Requires administrative privileges.</p>
+<p class="ep-text">Changes the operating mode of the device (e.g., from "active" to "register" to allow card registration). Requires administrative privileges.</p>
 <div class="ep-label">Request Body</div>
 <pre>{ "mode": "active", "location": "Lobby" }
 // mode: "active" | "register" | "inactive" | "pending"</pre>
@@ -288,12 +288,12 @@ td code{background:rgba(255,255,255,.06);padding:1px 5px;border-radius:3px;font-
 <div class="endpoint" id="mem-list">
 <div class="ep-header" onclick="toggle(this)"><span class="ep-method m-get">GET</span><span class="ep-path">/members</span><span class="ep-desc">List members (paginated)</span></div>
 <div class="ep-body"><div class="auth-info"><span class="badge badge-jwt">JWT</span></div>
-<p class="ep-text">Retrieves a paginated list of all registered members (people with KTP access). Supports searching by name or NIK.</p>
+<p class="ep-text">Retrieves a paginated list of all registered members (people with card access). Supports searching by name, Unix ID, or phone.</p>
 <div class="ep-label">Query Params</div>
 <table><tr><th>Param</th><th>Type</th><th>Description</th></tr>
 <tr><td><code>page</code></td><td>int</td><td>Page number (default: 1)</td></tr>
 <tr><td><code>limit</code></td><td>int</td><td>Items per page (default: 20, max: 100)</td></tr>
-<tr><td><code>search</code></td><td>string</td><td>Search by NIK or name</td></tr></table>
+<tr><td><code>search</code></td><td>string</td><td>Search by Unix ID, name, or phone</td></tr></table>
 <div class="ep-label">Response 200</div>
 <pre>{
   "data": {
@@ -306,14 +306,11 @@ td code{background:rgba(255,255,255,.06);padding:1px 5px;border-radius:3px;font-
 <div class="endpoint" id="mem-create">
 <div class="ep-header" onclick="toggle(this)"><span class="ep-method m-post">POST</span><span class="ep-path">/members</span><span class="ep-desc">Register new member</span></div>
 <div class="ep-body"><div class="auth-info"><span class="badge badge-jwt">JWT</span></div>
-<p class="ep-text">Registers a new member manually via the dashboard. The NIK must be exactly 16 digits.</p>
+<p class="ep-text">Registers a new member manually via the dashboard. A Unix ID is generated automatically.</p>
 <div class="ep-label">Request Body</div>
 <pre>{
-  "nik": "1234567890123456",   // required, 16 digits
   "name": "Budi Santoso",      // required, min 2 chars
-  "address": "Jl. Merdeka 1",
-  "birth_date": "1990-01-01",  // YYYY-MM-DD
-  "phone": "081234567890",
+  "phone": "081234567890",     // required
   "photo_url": "https://..."
 }</pre>
 </div></div>
@@ -325,23 +322,22 @@ td code{background:rgba(255,255,255,.06);padding:1px 5px;border-radius:3px;font-
 </div>
 </div>
 
-<div class="endpoint" id="mem-nik">
-<div class="ep-header" onclick="toggle(this)"><span class="ep-method m-get">GET</span><span class="ep-path">/members/nik/:nik</span><span class="ep-desc">Get member by NIK</span></div>
+<div class="endpoint" id="mem-unix">
+<div class="ep-header" onclick="toggle(this)"><span class="ep-method m-get">GET</span><span class="ep-path">/members/unix/:unix_id</span><span class="ep-desc">Get member by Unix ID</span></div>
 <div class="ep-body"><div class="auth-info"><span class="badge badge-jwt">JWT</span></div>
-<p class="ep-text">Retrieves detailed information about a specific member using their 16-digit NIK.</p>
+<p class="ep-text">Retrieves detailed information about a specific member using their Unix ID.</p>
 </div>
 </div>
 
 <div class="endpoint" id="mem-update">
 <div class="ep-header" onclick="toggle(this)"><span class="ep-method m-put">PUT</span><span class="ep-path">/members/:id</span><span class="ep-desc">Update member</span></div>
 <div class="ep-body"><div class="auth-info"><span class="badge badge-jwt">JWT</span></div>
-<p class="ep-text">Updates member details. Note that the NIK cannot be changed after registration. The "is_active" flag can be toggled to grant or revoke access.</p>
+<p class="ep-text">Updates member details. Note that the Unix ID cannot be changed after registration. The "is_active" flag can be toggled to grant or revoke access.</p>
 <div class="ep-label">Request Body</div>
 <pre>{
   "name": "New Name",
-  "address": "New Address",
   "phone": "08xxx",
-  "birth_date": "1990-01-01",
+  "photo_url": "https://...",
   "is_active": true
 }</pre>
 </div></div>
@@ -354,45 +350,46 @@ td code{background:rgba(255,255,255,.06);padding:1px 5px;border-radius:3px;font-
 </div>
 </div>
 
-<!-- KTP SECTION -->
-<div class="section" id="section-ktp">
-<h2>KTP Tapping</h2>
-<p style="color:#94a3b8;margin-bottom:10px;font-size:14px">Device taps KTP cards. In <b>active</b> mode: grants/denies access. In <b>register</b> mode: registers new members.</p>
+<!-- CARD SECTION -->
+<div class="section" id="section-card">
+<h2>Card Tapping</h2>
+<p style="color:#94a3b8;margin-bottom:10px;font-size:14px">Device taps cards. In <b>active</b> mode: grants/denies access. In <b>register</b> mode: activates members.</p>
 
-<div class="endpoint" id="ktp-tap">
-<div class="ep-header" onclick="toggle(this)"><span class="ep-method m-post">POST</span><span class="ep-path">/ktp/tap</span><span class="ep-desc">Process KTP tap from device</span></div>
+<div class="endpoint" id="card-tap">
+<div class="ep-header" onclick="toggle(this)"><span class="ep-method m-post">POST</span><span class="ep-path">/card/tap</span><span class="ep-desc">Process card tap from device</span></div>
 <div class="ep-body"><div class="auth-info"><span class="badge badge-device">DEVICE</span> Headers: <code>X-API-Key</code> + <code>X-Node-ID</code></div>
 <div class="ep-label">Request Body</div>
 <pre>{
-  "nik": "1234567890123456",
-  "name": "Optional Name"       // used in register mode
+  "unix_id": "1715403123456",
+  "name": "Optional Name",      // used in register mode
+  "phone": "Optional Phone"     // used in register mode
 }</pre>
 <div class="ep-label">Response (Active Mode - Granted)</div>
 <pre>{ "data": { "action": "granted", "message": "Access granted", "member": {...}, "device_mode": "active" } }</pre>
 <div class="ep-label">Response (Active Mode - Denied)</div>
-<pre>{ "data": { "action": "denied", "message": "Access denied: NIK not registered", "device_mode": "active" } }</pre>
+<pre>{ "data": { "action": "denied", "message": "Access denied: Unix ID not registered", "device_mode": "active" } }</pre>
 <div class="ep-label">Response (Register Mode - New)</div>
-<pre>{ "data": { "action": "registered", "message": "KTP registered as new member", "member": {...}, "device_mode": "register" } }</pre>
+<pre>{ "data": { "action": "registered", "message": "Card registered, member activated", "member": {...}, "device_mode": "register" } }</pre>
 </div></div>
 
-<div class="endpoint" id="ktp-logs">
-<div class="ep-header" onclick="toggle(this)"><span class="ep-method m-get">GET</span><span class="ep-path">/ktp/logs</span><span class="ep-desc">Get all access logs</span></div>
+<div class="endpoint" id="card-logs">
+<div class="ep-header" onclick="toggle(this)"><span class="ep-method m-get">GET</span><span class="ep-path">/card/logs</span><span class="ep-desc">Get all access logs</span></div>
 <div class="ep-body"><div class="auth-info"><span class="badge badge-jwt">JWT</span></div>
 <div class="ep-label">Query Params</div>
 <table><tr><th>Param</th><th>Description</th></tr>
 <tr><td><code>page</code></td><td>Page number</td></tr>
 <tr><td><code>limit</code></td><td>Items per page</td></tr>
 <tr><td><code>node_id</code></td><td>Filter by device</td></tr>
-<tr><td><code>nik</code></td><td>Filter by NIK</td></tr></table>
+<tr><td><code>unix_id</code></td><td>Filter by Unix ID</td></tr></table>
 </div></div>
 
-<div class="endpoint" id="ktp-logs-dev">
-<div class="ep-header" onclick="toggle(this)"><span class="ep-method m-get">GET</span><span class="ep-path">/ktp/logs/device/:node_id</span><span class="ep-desc">Logs by device</span></div>
+<div class="endpoint" id="card-logs-dev">
+<div class="ep-header" onclick="toggle(this)"><span class="ep-method m-get">GET</span><span class="ep-path">/card/logs/device/:node_id</span><span class="ep-desc">Logs by device</span></div>
 <div class="ep-body"><div class="auth-info"><span class="badge badge-jwt">JWT</span></div></div>
 </div>
 
-<div class="endpoint" id="ktp-logs-nik">
-<div class="ep-header" onclick="toggle(this)"><span class="ep-method m-get">GET</span><span class="ep-path">/ktp/logs/member/:nik</span><span class="ep-desc">Logs by member NIK</span></div>
+<div class="endpoint" id="card-logs-unix">
+<div class="ep-header" onclick="toggle(this)"><span class="ep-method m-get">GET</span><span class="ep-path">/card/logs/member/:unix_id</span><span class="ep-desc">Logs by member Unix ID</span></div>
 <div class="ep-body"><div class="auth-info"><span class="badge badge-jwt">JWT</span></div></div>
 </div>
 </div>
@@ -521,11 +518,9 @@ fmt.Println(result)</pre>
   -H "Authorization: Bearer YOUR_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
-    "nik": "1234567890123456",
     "name": "Budi Santoso",
-    "address": "Jl. Merdeka No. 1",
     "phone": "081234567890",
-    "birth_date": "1990-01-01"
+    "photo_url": "https://..."
   }'</pre>
 </div>
 <div class="tab-content" data-group="memcreate">
@@ -536,11 +531,9 @@ fmt.Println(result)</pre>
     'Authorization': `Bearer ${token}`
   },
   body: JSON.stringify({
-    nik: '1234567890123456',
     name: 'Budi Santoso',
-    address: 'Jl. Merdeka No. 1',
     phone: '081234567890',
-    birth_date: '1990-01-01'
+    photo_url: 'https://...'
   })
 });
 console.log(await res.json());</pre>
@@ -549,40 +542,38 @@ console.log(await res.json());</pre>
 <pre>res = requests.post('https://iot.airashi.biz.id/api/v1/members',
     headers={'Authorization': f'Bearer {token}'},
     json={
-        'nik': '1234567890123456',
-        'name': 'Budi Santoso',
-        'address': 'Jl. Merdeka No. 1',
-        'phone': '081234567890',
-        'birth_date': '1990-01-01'
+      'name': 'Budi Santoso',
+      'phone': '081234567890',
+      'photo_url': 'https://...'
     })
 print(res.json())</pre>
 </div>
 </div>
 
-<h3 style="color:#fff;font-size:16px;margin:24px 0 12px">4. KTP Tap from Device (ESP32/Arduino)</h3>
+<h3 style="color:#fff;font-size:16px;margin:24px 0 12px">4. Card Tap from Device (ESP32/Arduino)</h3>
 <div class="code-tabs">
 <div class="tab-bar">
-<button class="tab-btn active" onclick="switchTab(this,'ktptap')">cURL</button>
-<button class="tab-btn" onclick="switchTab(this,'ktptap')">Node.js</button>
-<button class="tab-btn" onclick="switchTab(this,'ktptap')">Arduino/C++</button>
+<button class="tab-btn active" onclick="switchTab(this,'cardtap')">cURL</button>
+<button class="tab-btn" onclick="switchTab(this,'cardtap')">Node.js</button>
+<button class="tab-btn" onclick="switchTab(this,'cardtap')">Arduino/C++</button>
 </div>
-<div class="tab-content active" data-group="ktptap">
+<div class="tab-content active" data-group="cardtap">
 <pre># Using Device API Key from .env
-curl -X POST https://iot.airashi.biz.id/api/v1/ktp/tap \
+curl -X POST https://iot.airashi.biz.id/api/v1/card/tap \
   -H "Content-Type: application/json" \
   -H "X-API-Key: YOUR_DEVICE_API_KEY" \
   -H "X-Node-ID: node-xxxx-xxxx" \
-  -d '{"nik":"1234567890123456"}'</pre>
+  -d '{"unix_id":"1715403123456"}'</pre>
 </div>
-<div class="tab-content" data-group="ktptap">
-<pre>const res = await fetch('https://iot.airashi.biz.id/api/v1/ktp/tap', {
+<div class="tab-content" data-group="cardtap">
+<pre>const res = await fetch('https://iot.airashi.biz.id/api/v1/card/tap', {
   method: 'POST',
   headers: {
     'Content-Type': 'application/json',
     'X-API-Key': 'YOUR_DEVICE_API_KEY',
     'X-Node-ID': 'node-xxxx-xxxx'
   },
-  body: JSON.stringify({ nik: '1234567890123456' })
+  body: JSON.stringify({ unix_id: '1715403123456' })
 });
 const { data } = await res.json();
 if (data.action === 'granted') {
@@ -591,17 +582,17 @@ if (data.action === 'granted') {
   console.log('DENIED:', data.message);
 }</pre>
 </div>
-<div class="tab-content" data-group="ktptap">
+<div class="tab-content" data-group="cardtap">
 <pre>#include &lt;HTTPClient.h&gt;
 #include &lt;ArduinoJson.h&gt;
 
 HTTPClient http;
-http.begin("http://YOUR_SERVER:8080/api/v1/ktp/tap");
+http.begin("http://YOUR_SERVER:8080/api/v1/card/tap");
 http.addHeader("Content-Type", "application/json");
 http.addHeader("X-API-Key", "YOUR_DEVICE_API_KEY");
 http.addHeader("X-Node-ID", "node-xxxx-xxxx");
 
-String payload = "{\"nik\":\"" + scannedNIK + "\"}";
+String payload = "{\"unix_id\":\"" + scannedUnixID + "\"}";
 int code = http.POST(payload);
 
 if (code == 200) {
@@ -701,42 +692,42 @@ void checkStatus() {
 <button class="tab-btn" onclick="switchTab(this,'logs')">Python</button>
 </div>
 <div class="tab-content active" data-group="logs">
-<pre># All logs
-curl https://iot.airashi.biz.id/api/v1/ktp/logs \
+# All logs
+curl https://iot.airashi.biz.id/api/v1/card/logs \
   -H "Authorization: Bearer YOUR_TOKEN"
 
 # Filter by device
-curl https://iot.airashi.biz.id/api/v1/ktp/logs/device/node-xxxx \
+curl https://iot.airashi.biz.id/api/v1/card/logs/device/node-xxxx \
   -H "Authorization: Bearer YOUR_TOKEN"
 
-# Filter by NIK
-curl https://iot.airashi.biz.id/api/v1/ktp/logs/member/1234567890123456 \
+# Filter by Unix ID
+curl https://iot.airashi.biz.id/api/v1/card/logs/member/1715403123456 \
   -H "Authorization: Bearer YOUR_TOKEN"
 
 # With pagination
-curl "https://iot.airashi.biz.id/api/v1/ktp/logs?page=1&limit=50" \
+curl "https://iot.airashi.biz.id/api/v1/card/logs?page=1&limit=50" \
   -H "Authorization: Bearer YOUR_TOKEN"</pre>
 </div>
 <div class="tab-content" data-group="logs">
 <pre>// All logs with pagination
 const res = await fetch(
-  'https://iot.airashi.biz.id/api/v1/ktp/logs?page=1&limit=50',
+  'https://iot.airashi.biz.id/api/v1/card/logs?page=1&limit=50',
   { headers: { 'Authorization': `Bearer ${token}` } }
 );
 const { data } = await res.json();
 console.log(`Total: ${data.pagination.total}`);
 data.logs.forEach(log => {
-  console.log(`${log.action} - ${log.nik} at ${log.tapped_at}`);
+  console.log(`${log.action} - ${log.unix_id} at ${log.tapped_at}`);
 });</pre>
 </div>
 <div class="tab-content" data-group="logs">
 <pre># All logs
-res = requests.get('https://iot.airashi.biz.id/api/v1/ktp/logs',
+res = requests.get('https://iot.airashi.biz.id/api/v1/card/logs',
     headers={'Authorization': f'Bearer {token}'},
     params={'page': 1, 'limit': 50})
 logs = res.json()['data']['logs']
 for log in logs:
-    print(f"{log['action']} - {log['nik']}")</pre>
+  print(f"{log['action']} - {log['unix_id']}")</pre>
 </div>
 </div>
 </div>

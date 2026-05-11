@@ -73,8 +73,12 @@ func (h *MemberHandler) GetByID(c *gin.Context) {
 	utils.ResponseOK(c, http.StatusOK, "Member detail", member)
 }
 
-func (h *MemberHandler) GetByNIK(c *gin.Context) {
-	member, err := h.svc.GetByNIK(c.Param("nik"))
+func (h *MemberHandler) GetByUnixID(c *gin.Context) {
+	unixID := c.Param("unix_id")
+	if unixID == "" {
+		unixID = c.Param("nik")
+	}
+	member, err := h.svc.GetByUnixID(unixID)
 	if err != nil {
 		utils.ResponseError(c, http.StatusNotFound, "Member not found", err.Error())
 		return

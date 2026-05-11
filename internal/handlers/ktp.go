@@ -51,7 +51,10 @@ func (h *KTPHandler) GetLogs(c *gin.Context) {
 	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
 	limit, _ := strconv.Atoi(c.DefaultQuery("limit", "20"))
 	nodeID := c.Query("node_id")
-	nik := c.Query("nik")
+	unixID := c.Query("unix_id")
+	if unixID == "" {
+		unixID = c.Query("nik")
+	}
 
 	if page < 1 {
 		page = 1
@@ -60,7 +63,7 @@ func (h *KTPHandler) GetLogs(c *gin.Context) {
 		limit = 20
 	}
 
-	logs, total, err := h.svc.GetLogs(nodeID, nik, page, limit)
+	logs, total, err := h.svc.GetLogs(nodeID, unixID, page, limit)
 	if err != nil {
 		utils.ResponseError(c, http.StatusInternalServerError, "Failed to fetch logs", err.Error())
 		return
@@ -93,11 +96,15 @@ func (h *KTPHandler) GetLogsByDevice(c *gin.Context) {
 	})
 }
 
-func (h *KTPHandler) GetLogsByNIK(c *gin.Context) {
+func (h *KTPHandler) GetLogsByUnixID(c *gin.Context) {
 	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
 	limit, _ := strconv.Atoi(c.DefaultQuery("limit", "20"))
+	unixID := c.Param("unix_id")
+	if unixID == "" {
+		unixID = c.Param("nik")
+	}
 
-	logs, total, err := h.svc.GetLogs("", c.Param("nik"), page, limit)
+	logs, total, err := h.svc.GetLogs("", unixID, page, limit)
 	if err != nil {
 		utils.ResponseError(c, http.StatusInternalServerError, "Failed to fetch logs", err.Error())
 		return

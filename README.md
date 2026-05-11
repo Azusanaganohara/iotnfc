@@ -1,6 +1,6 @@
-# IoT KTP Tap System API Documentation
+# IoT Card Tap System API Documentation
 
-This REST API is built with Golang, Gin Gonic, and GORM. It serves as the backend for an IoT-based door/gate access system utilizing KTP (Kartu Tanda Penduduk - Indonesian ID Card) as the access key. It supports multiple IoT devices with automatic provisioning and dynamic modes (Active/Register) controllable via a web dashboard (e.g., Next.js).
+This REST API is built with Golang, Gin Gonic, and GORM. It serves as the backend for an IoT-based door/gate access system utilizing card taps as the access key, with members identified by a generated Unix ID. It supports multiple IoT devices with automatic provisioning and dynamic modes (Active/Register) controllable via a web dashboard (e.g., Next.js).
 
 ---
 
@@ -18,23 +18,23 @@ When a new IoT device is installed, it doesn't have an identity yet.
 The web admin dashboard interacts with the API using JWT authentication:
 - **Admin Login:** Admin logs in and receives a JWT Access Token.
 - **Device Activation:** The admin sees the `pending` device on the dashboard and changes its mode to `active`.
-- **Member Management:** The admin can manually add, edit, or delete registered KTP members.
+- **Member Management:** The admin can add, edit, or delete registered card members.
 
 ### 3. Tap to Unlock (Active Mode)
 This is the normal day-to-day operation.
-1. A user taps their KTP on the IoT device.
-2. The device sends a `POST /api/v1/ktp/tap` request with the KTP's `NIK` (Identity Number). It authenticates using headers: `X-Node-ID` and `X-API-Key`.
-3. The API checks if the NIK exists in the `members` table and is active.
+1. A user taps their card on the IoT device.
+2. The device sends a `POST /api/v1/card/tap` request with the member's `unix_id`. It authenticates using headers: `X-Node-ID` and `X-API-Key`.
+3. The API checks if the Unix ID exists in the `members` table and is active.
 4. If valid, the API responds with `action: "granted"`. The device unlocks the door. If invalid, it responds with `action: "denied"`.
 5. Every tap is recorded in the `access_logs` table.
 
 ### 4. Tap to Register (Register Mode)
-Instead of typing NIKs manually, admins can use the IoT device to enroll new KTPs.
-1. Admin changes a specific device's mode to `register` via the dashboard.
-2. The device periodically polls `GET /api/v1/devices/me/status` and realizes its mode changed.
-3. A user taps a new, unregistered KTP on the device.
-4. The device sends the tap request. Because the API knows this device is in `register` mode, it automatically adds the NIK to the database as a new member instead of trying to unlock a door.
-5. API responds with `action: "registered"`.
+Instead of typing IDs manually on devices, admins register members in the dashboard first to receive a Unix ID.
+1. Admin creates a member in the dashboard using name and phone number, then receives a generated `unix_id`.
+2. Admin changes a specific device's mode to `register` via the dashboard.
+3. The device periodically polls `GET /api/v1/devices/me/status` and realizes its mode changed.
+4. A user taps a card on the device. The device sends the tap request with the `unix_id`.
+5. The API validates the Unix ID (and optional name/phone match) and activates the member if valid.
 
 ---
 
@@ -124,7 +124,7 @@ nano .env # Edit the database credentials and passwords
 Create a service file: `sudo nano /etc/systemd/system/iot-api.service`
 ```ini
 [Unit]
-Description=IoT KTP API Service
+Description=IoT Card API Service
 After=network.target mysql.service
 
 [Service]
@@ -163,17 +163,17 @@ You can use **NSSM (Non-Sucking Service Manager)** to install it as a Windows Se
 1. Download NSSM and extract it.
 2. Open PowerShell as Administrator and run:
    ```powershell
-   nssm install IoT-KTP-API "C:\path\to\your\app\iot-api.exe"
+   nssm install IoT-Card-API "C:\path\to\your\app\iot-api.exe"
    ```
 3. Set the AppDirectory to the folder containing your `.env` file (`C:\path\to\your\app`).
 4. Start the service:
    ```powershell
-   nssm start IoT-KTP-API
+   nssm start IoT-Card-API
    ```
 
 *Alternatively, you can run it using PM2 if you have Node.js installed:*
 ```powershell
 npm install -g pm2
-pm2 start iot-api.exe --name "iot-ktp-api"
+pm2 start iot-api.exe --name "iot-card-api"
 pm2 save
 ```
