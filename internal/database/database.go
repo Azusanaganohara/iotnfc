@@ -3,11 +3,13 @@ package database
 import (
 	"fmt"
 	"log"
+	"sync"
 
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
+	"gorm.io/gorm/schema"
 
 	"iot-ktp-api/internal/config"
 	"iot-ktp-api/internal/models"
@@ -51,18 +53,48 @@ func Migrate(db *gorm.DB) {
 	if err != nil {
 		log.Fatalf("Auto migration failed: %v", err)
 	}
-	legacyMemberColumns := []string{"nik", "address", "birth_date"}
-	for _, col := range legacyMemberColumns {
-		if db.Migrator().HasColumn(&models.Member{}, col) {
-			if err := db.Migrator().DropColumn(&models.Member{}, col); err != nil {
-				log.Fatalf("Failed to drop members.%s column: %v", col, err)
-			}
-			log.Printf("Dropped members.%s column", col)
-		}
+	cleanupModels := []interface{}{
+		&models.User{},
+		&models.IotDevice{},
+		&models.Member{},
+		&models.AccessLog{},
+	}
+	for _, model := range cleanupModels {
+		dropExtraColumns(db, model)
 	}
 	log.Println("Database migration completed")
 
 	seedAdmin(db)
+}
+
+func dropExtraColumns(db *gorm.DB, model interface{}) {
+	sch, err := schema.Parse(model, &sync.Map{}, db.NamingStrategy)
+	if err != nil {
+		log.Fatalf("Failed to parse schema for %T: %v", model, err)
+	}
+
+	columnTypes, err := db.Migrator().ColumnTypes(sch.Table)
+	if err != nil {
+		log.Fatalf("Failed to list columns for %s: %v", sch.Table, err)
+	}
+
+	allowed := make(map[string]struct{}, len(sch.Fields))
+	for _, field := range sch.Fields {
+		if field.DBName != "" {
+			allowed[field.DBName] = struct{}{}
+		}
+	}
+
+	for _, col := range columnTypes {
+		name := col.Name()
+		if _, ok := allowed[name]; ok {
+			continue
+		}
+		if err := db.Migrator().DropColumn(sch.Table, name); err != nil {
+			log.Fatalf("Failed to drop %s.%s column: %v", sch.Table, name, err)
+		}
+		log.Printf("Dropped %s.%s column", sch.Table, name)
+	}
 }
 
 func seedAdmin(db *gorm.DB) {
