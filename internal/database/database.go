@@ -51,11 +51,14 @@ func Migrate(db *gorm.DB) {
 	if err != nil {
 		log.Fatalf("Auto migration failed: %v", err)
 	}
-	if db.Migrator().HasColumn(&models.Member{}, "nik") {
-		if err := db.Migrator().DropColumn(&models.Member{}, "nik"); err != nil {
-			log.Fatalf("Failed to drop members.nik column: %v", err)
+	legacyMemberColumns := []string{"nik", "address", "birth_date"}
+	for _, col := range legacyMemberColumns {
+		if db.Migrator().HasColumn(&models.Member{}, col) {
+			if err := db.Migrator().DropColumn(&models.Member{}, col); err != nil {
+				log.Fatalf("Failed to drop members.%s column: %v", col, err)
+			}
+			log.Printf("Dropped members.%s column", col)
 		}
-		log.Println("Dropped members.nik column")
 	}
 	log.Println("Database migration completed")
 
