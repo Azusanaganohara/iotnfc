@@ -80,7 +80,6 @@ func SetupAPI(
 			members.GET("", memberH.GetAll)
 			members.POST("", memberH.Create)
 			members.GET("/unix/:unix_id", memberH.GetByUnixID)
-			members.GET("/nik/:nik", memberH.GetByUnixID)
 			members.GET("/:id", memberH.GetByID)
 			members.PUT("/:id", memberH.Update)
 			members.DELETE("/:id", middleware.AdminRequired(), memberH.Delete)
@@ -112,7 +111,7 @@ func SetupAPI(
 			{
 				ktpAdmin.GET("/logs", ktpH.GetLogs)
 				ktpAdmin.GET("/logs/device/:node_id", ktpH.GetLogsByDevice)
-				ktpAdmin.GET("/logs/member/:nik", ktpH.GetLogsByUnixID)
+				ktpAdmin.GET("/logs/member/:unix_id", ktpH.GetLogsByUnixID)
 			}
 		}
 	}

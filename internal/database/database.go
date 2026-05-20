@@ -51,6 +51,12 @@ func Migrate(db *gorm.DB) {
 	if err != nil {
 		log.Fatalf("Auto migration failed: %v", err)
 	}
+	if db.Migrator().HasColumn(&models.Member{}, "nik") {
+		if err := db.Migrator().DropColumn(&models.Member{}, "nik"); err != nil {
+			log.Fatalf("Failed to drop members.nik column: %v", err)
+		}
+		log.Println("Dropped members.nik column")
+	}
 	log.Println("Database migration completed")
 
 	seedAdmin(db)

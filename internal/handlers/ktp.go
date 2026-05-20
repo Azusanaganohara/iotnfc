@@ -52,9 +52,6 @@ func (h *KTPHandler) GetLogs(c *gin.Context) {
 	limit, _ := strconv.Atoi(c.DefaultQuery("limit", "20"))
 	nodeID := c.Query("node_id")
 	unixID := c.Query("unix_id")
-	if unixID == "" {
-		unixID = c.Query("nik")
-	}
 
 	if page < 1 {
 		page = 1
@@ -100,9 +97,6 @@ func (h *KTPHandler) GetLogsByUnixID(c *gin.Context) {
 	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
 	limit, _ := strconv.Atoi(c.DefaultQuery("limit", "20"))
 	unixID := c.Param("unix_id")
-	if unixID == "" {
-		unixID = c.Param("nik")
-	}
 
 	logs, total, err := h.svc.GetLogs("", unixID, page, limit)
 	if err != nil {
