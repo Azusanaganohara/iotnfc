@@ -21,6 +21,8 @@ type CreateMemberInput struct {
 	Name     string `json:"name" binding:"required,min=2,max=100"`
 	Phone    string `json:"phone" binding:"required,min=8,max=20"`
 	PhotoURL string `json:"photo_url"`
+	UnixID   string `json:"unix_id"`
+	NIK      string `json:"nik"`
 }
 
 type UpdateMemberInput struct {
@@ -32,6 +34,11 @@ type UpdateMemberInput struct {
 
 func (s *MemberService) Create(input CreateMemberInput, registeredByUser string) (*models.Member, error) {
 	unixID := utils.GenerateUnixID()
+	if input.UnixID != "" {
+		unixID = input.UnixID
+	} else if input.NIK != "" {
+		unixID = input.NIK
+	}
 	member := &models.Member{
 		ID:               utils.GenerateUUID(),
 		UnixID:           unixID,
