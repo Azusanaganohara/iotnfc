@@ -88,9 +88,23 @@ func attachDevice(c *gin.Context, db *gorm.DB, device *models.IotDevice) {
 	_ = db.Model(device).Update("last_seen_at", now)
 
 	hardwareID := strings.TrimSpace(c.GetHeader("X-Hardware-ID"))
-	if hardwareID != "" && (device.HardwareID == "" || strings.HasPrefix(device.HardwareID, "PENDING-")) {
-		if err := db.Model(device).Update("hardware_id", hardwareID).Error; err == nil {
-			device.HardwareID = hardwareID
+	if hardwareID != "" {
+		updates := map[string]interface{}{}
+		if device.HardwareID == "" || strings.HasPrefix(device.HardwareID, "PENDING-") {
+			updates["hardware_id"] = hardwareID
+		}
+		if device.DeviceName == "" || strings.HasPrefix(strings.ToUpper(device.DeviceName), "PENDING-") {
+			updates["device_name"] = hardwareID
+		}
+		if len(updates) > 0 {
+			if err := db.Model(device).Updates(updates).Error; err == nil {
+				if v, ok := updates["hardware_id"]; ok {
+					device.HardwareID = v.(string)
+				}
+				if v, ok := updates["device_name"]; ok {
+					device.DeviceName = v.(string)
+				}
+			}
 		}
 	}
 
