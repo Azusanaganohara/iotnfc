@@ -2,6 +2,7 @@ package middleware
 
 import (
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -84,7 +85,14 @@ func DeviceAuth(db *gorm.DB) gin.HandlerFunc {
 
 func attachDevice(c *gin.Context, db *gorm.DB, device *models.IotDevice) {
 	now := time.Now()
-	db.Model(device).Update("last_seen_at", now)
+	_ = db.Model(device).Update("last_seen_at", now)
+
+	hardwareID := strings.TrimSpace(c.GetHeader("X-Hardware-ID"))
+	if hardwareID != "" && (device.HardwareID == "" || strings.HasPrefix(device.HardwareID, "PENDING-")) {
+		if err := db.Model(device).Update("hardware_id", hardwareID).Error; err == nil {
+			device.HardwareID = hardwareID
+		}
+	}
 
 	c.Set("device", device)
 	c.Set("device_node_id", device.NodeID)

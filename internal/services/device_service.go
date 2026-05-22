@@ -2,6 +2,7 @@ package services
 
 import (
 	"errors"
+	"strings"
 	"time"
 
 	"gorm.io/gorm"
@@ -20,7 +21,7 @@ func NewDeviceService(db *gorm.DB) *DeviceService {
 }
 
 type ProvisionInput struct {
-	HardwareID   string `json:"hardware_id" binding:"required"`
+	HardwareID   string `json:"hardware_id"`
 	DeviceName   string `json:"device_name" binding:"required,min=2"`
 	ProvisionKey string `json:"provision_key"`
 }
@@ -51,23 +52,25 @@ func (s *DeviceService) Provision(input ProvisionInput) (*ProvisionResult, error
 		return nil, errors.New("invalid provision key")
 	}
 
-	var existing models.IotDevice
-	if err := s.db.Where("hardware_id = ?", input.HardwareID).First(&existing).Error; err == nil {
-		newAPIKey, err := utils.GenerateAPIKey()
-		if err != nil {
-			return nil, err
+	if strings.TrimSpace(input.HardwareID) != "" {
+		var existing models.IotDevice
+		if err := s.db.Where("hardware_id = ?", input.HardwareID).First(&existing).Error; err == nil {
+			newAPIKey, err := utils.GenerateAPIKey()
+			if err != nil {
+				return nil, err
+			}
+			s.db.Model(&existing).Updates(map[string]interface{}{
+				"api_key":     newAPIKey,
+				"device_name": input.DeviceName,
+			})
+			return &ProvisionResult{
+				NodeID:     existing.NodeID,
+				APIKey:     newAPIKey,
+				DeviceName: input.DeviceName,
+				Mode:       string(existing.Mode),
+				Message:    "Device re-provisioned with new API key",
+			}, nil
 		}
-		s.db.Model(&existing).Updates(map[string]interface{}{
-			"api_key":     newAPIKey,
-			"device_name": input.DeviceName,
-		})
-		return &ProvisionResult{
-			NodeID:     existing.NodeID,
-			APIKey:     newAPIKey,
-			DeviceName: input.DeviceName,
-			Mode:       string(existing.Mode),
-			Message:    "Device re-provisioned with new API key",
-		}, nil
 	}
 	nodeID := utils.GenerateNodeID()
 	apiKey, err := utils.GenerateAPIKey()
@@ -76,10 +79,15 @@ func (s *DeviceService) Provision(input ProvisionInput) (*ProvisionResult, error
 	}
 
 	now := time.Now()
+	hardwareID := strings.TrimSpace(input.HardwareID)
+	if hardwareID == "" {
+		hardwareID = "PENDING-" + nodeID
+	}
+
 	device := &models.IotDevice{
 		ID:           utils.GenerateUUID(),
 		NodeID:       nodeID,
-		HardwareID:   input.HardwareID,
+		HardwareID:   hardwareID,
 		DeviceName:   input.DeviceName,
 		APIKey:       apiKey,
 		Mode:         models.DeviceModePending,
