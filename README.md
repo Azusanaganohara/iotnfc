@@ -10,9 +10,10 @@ The system is designed to handle multiple IoT readers securely while providing a
 
 ### 1. Device Provisioning (First Boot)
 When a new IoT device is installed, it doesn't have an identity yet.
-1. The device sends a `POST /api/v1/devices/provision` request containing its physical MAC address (`hardware_id`) and the `PROVISION_SECRET`.
-2. The API generates a unique `node_id` (UUID) for this device and registers it in the database with a `pending` state.
-3. The device saves this `node_id`.
+1. The device sends a `POST /api/v1/devices/provision` request containing its physical MAC address (`hardware_id`) and a valid provisioning key.
+2. The provisioning key can be either `PROVISION_SECRET` or `DEVICE_API_KEY`.
+3. The API generates a unique `node_id` (UUID) for this device and registers it in the database with a `pending` state.
+4. The device saves this `node_id`.
 
 ### 2. Administrator Dashboard (Next.js)
 The web admin dashboard interacts with the API using JWT authentication:
@@ -73,7 +74,7 @@ Here is the explanation of all variables inside the `.env` file.
 | `JWT_SECRET` | Secret key used to sign and verify JWT tokens for the web dashboard. | `e39d4...6cd0` |
 | `JWT_ACCESS_DURATION_MIN` | JWT Access Token lifespan in minutes. | `15` |
 | `JWT_REFRESH_DURATION_DAYS` | JWT Refresh Token lifespan in days. | `7` |
-| `PROVISION_SECRET` | The secret password hardcoded into the IoT device firmware. The device must send this to register itself to the system. | `b3bb2...bdbe` |
+| `PROVISION_SECRET` | Optional dedicated provisioning secret. If you want a single-key setup, the firmware may also use `DEVICE_API_KEY` for provisioning. | `b3bb2...bdbe` |
 | `DEVICE_API_KEY` | The Global API Key for IoT devices. Devices use this as the `X-API-Key` header when sending Tap events. | `8e355...303a5` |
 | `DEVICE_MASTER_KEY` | Development master key. Bypasses device validation. **Must be empty in production.** | *(empty)* |
 | `REGISTER_MODE_TIMEOUT_MIN` | Minutes before a device in `register` mode automatically reverts to `active`. `0` means manual only. | `0` |

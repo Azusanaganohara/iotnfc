@@ -40,7 +40,14 @@ type SetModeInput struct {
 
 func (s *DeviceService) Provision(input ProvisionInput) (*ProvisionResult, error) {
 	cfg := config.Get()
-	if cfg.ProvisionSecret != "" && input.ProvisionKey != cfg.ProvisionSecret {
+	validProvisionKey := false
+	if cfg.ProvisionSecret != "" && input.ProvisionKey == cfg.ProvisionSecret {
+		validProvisionKey = true
+	}
+	if cfg.DeviceAPIKey != "" && input.ProvisionKey == cfg.DeviceAPIKey {
+		validProvisionKey = true
+	}
+	if !validProvisionKey {
 		return nil, errors.New("invalid provision key")
 	}
 	var existing models.IotDevice
