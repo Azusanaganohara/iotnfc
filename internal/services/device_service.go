@@ -2,7 +2,6 @@ package services
 
 import (
 	"errors"
-	"strings"
 	"time"
 
 	"gorm.io/gorm"
@@ -21,7 +20,7 @@ func NewDeviceService(db *gorm.DB) *DeviceService {
 }
 
 type ProvisionInput struct {
-	HardwareID   string `json:"hardware_id"`
+	HardwareID   string `json:"hardware_id" binding:"required"`
 	DeviceName   string `json:"device_name" binding:"required,min=2"`
 	ProvisionKey string `json:"provision_key"`
 }
@@ -52,9 +51,6 @@ func (s *DeviceService) Provision(input ProvisionInput) (*ProvisionResult, error
 		return nil, errors.New("invalid provision key")
 	}
 
-	if strings.TrimSpace(input.HardwareID) == "" {
-		input.HardwareID = "AUTO-" + utils.GenerateUUID()
-	}
 	var existing models.IotDevice
 	if err := s.db.Where("hardware_id = ?", input.HardwareID).First(&existing).Error; err == nil {
 		newAPIKey, err := utils.GenerateAPIKey()
