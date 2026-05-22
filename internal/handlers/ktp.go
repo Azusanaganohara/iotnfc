@@ -111,7 +111,7 @@ func (h *KTPHandler) GetLogsByUnixID(c *gin.Context) {
 }
 
 type confirmInput struct {
-	UnixID   string `json:"unix_id" binding:"required,numeric"`
+	UnixID   string `json:"unix_id" binding:"required"`
 	MemberID string `json:"member_id" binding:"required"`
 }
 

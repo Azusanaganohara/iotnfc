@@ -20,7 +20,7 @@ func NewKTPService(db *gorm.DB) *KTPService {
 }
 
 type TapInput struct {
-	UnixID string `json:"unix_id" binding:"required,numeric"`
+	UnixID string `json:"unix_id" binding:"required"`
 	Name   string `json:"name"`
 	Phone  string `json:"phone"`
 }
