@@ -109,3 +109,30 @@ func (h *KTPHandler) GetLogsByUnixID(c *gin.Context) {
 		"total": total,
 	})
 }
+
+type confirmInput struct {
+	UnixID   string `json:"unix_id" binding:"required,numeric"`
+	MemberID string `json:"member_id" binding:"required"`
+}
+
+func (h *KTPHandler) Confirm(c *gin.Context) {
+	var input confirmInput
+	if err := c.ShouldBindJSON(&input); err != nil {
+		utils.ResponseError(c, http.StatusBadRequest, "Validation error", err.Error())
+		return
+	}
+
+	deviceRaw, exists := c.Get("device")
+	if !exists {
+		utils.ResponseError(c, http.StatusInternalServerError, "Device context missing", "")
+		return
+	}
+	device := deviceRaw.(*models.IotDevice)
+
+	if err := h.svc.ConfirmRegistration(device.NodeID, input.UnixID, input.MemberID); err != nil {
+		utils.ResponseError(c, http.StatusNotFound, "Confirmation not found", err.Error())
+		return
+	}
+
+	utils.ResponseOK(c, http.StatusOK, "Registration confirmed", gin.H{"unix_id": input.UnixID, "member_id": input.MemberID})
+}

@@ -91,6 +91,7 @@ func SetupAPI(
 			cardDevice.Use(middleware.DeviceAuth(db))
 			{
 				cardDevice.POST("/tap", ktpH.Tap)
+				cardDevice.POST("/confirm", ktpH.Confirm)
 			}
 			cardAdmin := card.Group("")
 			cardAdmin.Use(middleware.AuthRequired())

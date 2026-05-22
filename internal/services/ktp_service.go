@@ -30,6 +30,7 @@ type TapResult struct {
 	Message    string         `json:"message"`
 	Member     *models.Member `json:"member,omitempty"`
 	DeviceMode string         `json:"device_mode"`
+	Pending    *models.PendingRegistration `json:"pending,omitempty"`
 }
 
 func (s *KTPService) ProcessTap(device *models.IotDevice, input TapInput) (*TapResult, error) {
@@ -129,6 +130,15 @@ func (s *KTPService) handleRegisterTap(device *models.IotDevice, input TapInput)
 		if err := s.db.Create(newMember).Error; err != nil {
 			return nil, err
 		}
+		// Prepare response including pending info before deleting the pending record
+		resp := &TapResult{
+			Action:     string(models.ActionRegistered),
+			Message:    "Card registered, member created",
+			Member:     newMember,
+			DeviceMode: string(device.Mode),
+			Pending:    pending,
+		}
+
 		s.db.Delete(&models.PendingRegistration{}, "id = ?", pending.ID)
 
 		log.Action = models.ActionRegistered
@@ -136,12 +146,7 @@ func (s *KTPService) handleRegisterTap(device *models.IotDevice, input TapInput)
 		log.Reason = "Member created via register mode"
 		s.db.Create(log)
 
-		return &TapResult{
-			Action:     string(models.ActionRegistered),
-			Message:    "Card registered, member created",
-			Member:     newMember,
-			DeviceMode: string(device.Mode),
-		}, nil
+		return resp, nil
 	}
 
 	if member.IsActive {
@@ -236,4 +241,13 @@ func normalizePhone(value string) string {
 	value = strings.ReplaceAll(value, " ", "")
 	value = strings.ReplaceAll(value, "-", "")
 	return value
+}
+
+func (s *KTPService) ConfirmRegistration(nodeID, unixID, memberID string) error {
+	var log models.AccessLog
+	err := s.db.Where("node_id = ? AND unix_id = ? AND member_id = ? AND action = ?", nodeID, unixID, memberID, models.ActionRegistered).First(&log).Error
+	if err != nil {
+		return err
+	}
+	return nil
 }
