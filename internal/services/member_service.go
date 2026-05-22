@@ -2,9 +2,11 @@ package services
 
 import (
 	"errors"
+	"time"
 
 	"gorm.io/gorm"
 
+	"iot-ktp-api/internal/config"
 	"iot-ktp-api/internal/models"
 	"iot-ktp-api/internal/utils"
 )
@@ -22,6 +24,12 @@ type CreateMemberInput struct {
 	Phone    string `json:"phone" binding:"required,min=8,max=20"`
 	PhotoURL string `json:"photo_url"`
 	UnixID   string `json:"unix_id"`
+}
+
+type CreatePendingRegistrationInput struct {
+	Name         string `json:"name" binding:"required,min=2,max=100"`
+	Phone        string `json:"phone" binding:"required,min=8,max=20"`
+	DeviceNodeID string `json:"device_node_id" binding:"required"`
 }
 
 type UpdateMemberInput struct {
@@ -50,6 +58,40 @@ func (s *MemberService) Create(input CreateMemberInput, registeredByUser string)
 		return nil, err
 	}
 	return member, nil
+}
+
+func (s *MemberService) CreatePendingRegistration(input CreatePendingRegistrationInput, requestedBy string) (*models.PendingRegistration, error) {
+	var device models.IotDevice
+	if err := s.db.Where("node_id = ?", input.DeviceNodeID).First(&device).Error; err != nil {
+		return nil, errors.New("device not found")
+	}
+	if device.Mode != models.DeviceModeRegister {
+		return nil, errors.New("device is not in register mode")
+	}
+
+	s.db.Where("device_node_id = ?", input.DeviceNodeID).Delete(&models.PendingRegistration{})
+
+	now := time.Now()
+	var expires *time.Time
+	cfg := config.Get()
+	if cfg.RegisterModeTimeoutMin > 0 {
+		deadline := now.Add(time.Duration(cfg.RegisterModeTimeoutMin) * time.Minute)
+		expires = &deadline
+	}
+
+	pending := &models.PendingRegistration{
+		ID:           utils.GenerateUUID(),
+		DeviceNodeID: input.DeviceNodeID,
+		Name:         input.Name,
+		Phone:        input.Phone,
+		RequestedBy:  &requestedBy,
+		ExpiresAt:    expires,
+	}
+
+	if err := s.db.Create(pending).Error; err != nil {
+		return nil, err
+	}
+	return pending, nil
 }
 
 func (s *MemberService) GetAll(page, limit int, search string) ([]models.Member, int64, error) {

@@ -48,6 +48,7 @@ func Migrate(db *gorm.DB) {
 		&models.User{},
 		&models.IotDevice{},
 		&models.Member{},
+		&models.PendingRegistration{},
 		&models.AccessLog{},
 	)
 	if err != nil {
@@ -57,6 +58,7 @@ func Migrate(db *gorm.DB) {
 		&models.User{},
 		&models.IotDevice{},
 		&models.Member{},
+		&models.PendingRegistration{},
 		&models.AccessLog{},
 	}
 	for _, model := range cleanupModels {

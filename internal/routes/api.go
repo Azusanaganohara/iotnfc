@@ -79,6 +79,7 @@ func SetupAPI(
 		{
 			members.GET("", memberH.GetAll)
 			members.POST("", memberH.Create)
+			members.POST("/pending", memberH.CreatePending)
 			members.GET("/unix/:unix_id", memberH.GetByUnixID)
 			members.GET("/:id", memberH.GetByID)
 			members.PUT("/:id", memberH.Update)

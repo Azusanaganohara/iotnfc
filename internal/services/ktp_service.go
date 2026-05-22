@@ -3,6 +3,7 @@ package services
 import (
 	"errors"
 	"strings"
+	"time"
 
 	"gorm.io/gorm"
 
@@ -100,12 +101,45 @@ func (s *KTPService) handleRegisterTap(device *models.IotDevice, input TapInput)
 	}
 
 	if err != nil {
-		log.Action = models.ActionDenied
-		log.Reason = "Unix ID not found"
+		if !errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, err
+		}
+
+		pending, pendingErr := s.getPendingRegistration(device.NodeID)
+		if pendingErr != nil {
+			log.Action = models.ActionDenied
+			log.Reason = "No pending registration for device"
+			s.db.Create(log)
+			return &TapResult{
+				Action:     string(models.ActionDenied),
+				Message:    "Registration denied: no pending admin data",
+				DeviceMode: string(device.Mode),
+			}, nil
+		}
+
+		newMember := &models.Member{
+			ID:                 utils.GenerateUUID(),
+			UnixID:             input.UnixID,
+			Name:               pending.Name,
+			Phone:              pending.Phone,
+			IsActive:           true,
+			RegisteredByDevice: &device.NodeID,
+			RegisteredByUser:   pending.RequestedBy,
+		}
+		if err := s.db.Create(newMember).Error; err != nil {
+			return nil, err
+		}
+		s.db.Delete(&models.PendingRegistration{}, "id = ?", pending.ID)
+
+		log.Action = models.ActionRegistered
+		log.MemberID = &newMember.ID
+		log.Reason = "Member created via register mode"
 		s.db.Create(log)
+
 		return &TapResult{
-			Action:     string(models.ActionDenied),
-			Message:    "Registration denied: Unix ID not found",
+			Action:     string(models.ActionRegistered),
+			Message:    "Card registered, member created",
+			Member:     newMember,
 			DeviceMode: string(device.Mode),
 		}, nil
 	}
@@ -167,6 +201,18 @@ func (s *KTPService) handleRegisterTap(device *models.IotDevice, input TapInput)
 		Member:     &member,
 		DeviceMode: string(device.Mode),
 	}, nil
+}
+
+func (s *KTPService) getPendingRegistration(nodeID string) (*models.PendingRegistration, error) {
+	var pending models.PendingRegistration
+	if err := s.db.Where("device_node_id = ?", nodeID).Order("created_at DESC").First(&pending).Error; err != nil {
+		return nil, err
+	}
+	if pending.ExpiresAt != nil && time.Now().After(*pending.ExpiresAt) {
+		s.db.Delete(&pending)
+		return nil, gorm.ErrRecordNotFound
+	}
+	return &pending, nil
 }
 
 func (s *KTPService) GetLogs(nodeID, unixID string, page, limit int) ([]models.AccessLog, int64, error) {

@@ -64,6 +64,23 @@ func (h *MemberHandler) Create(c *gin.Context) {
 	utils.ResponseOK(c, http.StatusCreated, "Member registered successfully", member)
 }
 
+func (h *MemberHandler) CreatePending(c *gin.Context) {
+	var input services.CreatePendingRegistrationInput
+	if err := c.ShouldBindJSON(&input); err != nil {
+		utils.ResponseError(c, http.StatusBadRequest, "Validation error", err.Error())
+		return
+	}
+
+	userID, _ := c.Get("user_id")
+	pending, err := h.svc.CreatePendingRegistration(input, userID.(string))
+	if err != nil {
+		utils.ResponseError(c, http.StatusBadRequest, "Failed to create pending registration", err.Error())
+		return
+	}
+
+	utils.ResponseOK(c, http.StatusCreated, "Pending registration created", pending)
+}
+
 func (h *MemberHandler) GetByID(c *gin.Context) {
 	member, err := h.svc.GetByID(c.Param("id"))
 	if err != nil {
