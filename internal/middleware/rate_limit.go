@@ -10,6 +10,7 @@ import (
 
 type visitor struct {
 	count    int
+	window   time.Time
 	lastSeen time.Time
 }
 
@@ -46,17 +47,25 @@ func (rl *RateLimiter) cleanup() {
 func (rl *RateLimiter) Middleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		ip := c.ClientIP()
+		now := time.Now()
 
 		rl.mu.Lock()
 		v, exists := rl.visitors[ip]
-		if !exists || time.Since(v.lastSeen) > rl.window {
-			rl.visitors[ip] = &visitor{count: 1, lastSeen: time.Now()}
+		if !exists {
+			rl.visitors[ip] = &visitor{count: 1, window: now, lastSeen: now}
 			rl.mu.Unlock()
 			c.Next()
 			return
 		}
+
+		// Reset counter when a new time window starts.
+		if now.Sub(v.window) > rl.window {
+			v.count = 0
+			v.window = now
+		}
+
 		v.count++
-		v.lastSeen = time.Now()
+		v.lastSeen = now
 		count := v.count
 		rl.mu.Unlock()
 
